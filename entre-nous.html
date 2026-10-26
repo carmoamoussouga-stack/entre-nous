@@ -1,0 +1,1994 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0f0f14">
+  <title>ENTRE NOUS — Le jeu qui rapproche</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --night: #0f0f14;
+      --panel: #17171e;
+      --panel-light: #1e1d24;
+      --gold: #d4af37;
+      --rose: #e8a0a0;
+      --text: #f2eee8;
+      --muted: #9c98a0;
+      --line: rgba(242, 238, 232, .12);
+      font-family: Inter, "Helvetica Neue", system-ui, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { min-width: 320px; min-height: 100%; margin: 0; }
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+      background: var(--night);
+      color: var(--text);
+      font-weight: 300;
+      letter-spacing: .035em;
+    }
+
+    #ambience {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 22px 36px;
+    }
+
+    .topline {
+      position: absolute;
+      top: 25px;
+      left: 32px;
+      right: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+
+    .mark { color: var(--gold); }
+
+    main {
+      display: flex;
+      width: min(100%, 560px);
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      padding: 55px 0 20px;
+    }
+
+    .view { display: none; animation: rise .55s cubic-bezier(.2,.8,.2,1) both; }
+    .view.active { display: block; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .intro { margin: 0 0 15px; color: var(--gold); font-size: 9px; letter-spacing: .34em; text-align: center; text-transform: uppercase; }
+    h1, h2, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 15px;
+      color: var(--text);
+      font-size: clamp(42px, 10vw, 68px);
+      font-weight: 200;
+      letter-spacing: .2em;
+      line-height: 1.1;
+      text-align: center;
+      text-indent: .2em;
+    }
+    h2 { margin-bottom: 10px; font-size: 26px; font-weight: 300; letter-spacing: .09em; }
+    .lead { max-width: 400px; margin: 0 auto 36px; color: var(--muted); font-size: 12px; line-height: 1.9; text-align: center; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+    .section-head h2 { margin: 0; font-size: 18px; }
+    .count { color: var(--muted); font-size: 10px; }
+
+    .panel {
+      padding: 23px;
+      border: 1px solid var(--line);
+      background: linear-gradient(145deg, rgba(30,29,36,.9), rgba(20,20,27,.9));
+      box-shadow: 0 22px 80px rgba(0,0,0,.2);
+    }
+    .player-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .online-identity { margin: 0 0 14px; padding: 0 0 14px; border-bottom: 1px solid var(--line); }
+    .online-identity label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    .online-identity .add-row { margin-top: 0; }
+    .online-identity .picker-note { margin-top: 7px; }
+    .player-row {
+      display: flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 0 0 13px;
+      border: 1px solid rgba(242,238,232,.075);
+      background: rgba(255,255,255,.018);
+      color: var(--text);
+      font-size: 12px;
+      animation: rise .28s ease both;
+    }
+    .player-row button { width: 40px; min-height: 40px; padding: 0; border: 0; color: var(--muted); font-size: 17px; }
+    .player-row button:hover { color: var(--rose); }
+    .empty { margin: 0; padding: 16px 0; color: var(--muted); font-size: 11px; text-align: center; }
+    .add-row { display: flex; gap: 8px; margin-top: 15px; }
+    input, select, textarea {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      outline: none;
+      background: rgba(9,9,13,.56);
+      color: var(--text);
+      font: inherit;
+      font-size: 12px;
+      letter-spacing: .04em;
+      transition: border-color .22s ease, box-shadow .22s ease;
+    }
+    input, select { min-height: 44px; padding: 0 12px; }
+    textarea { min-height: 82px; padding: 12px; resize: vertical; line-height: 1.6; }
+    input:focus, select:focus, textarea:focus { border-color: rgba(212,175,55,.7); box-shadow: 0 0 0 2px rgba(212,175,55,.08); }
+    input::placeholder, textarea::placeholder { color: #79757d; }
+
+    button {
+      display: inline-flex;
+      min-height: 43px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      font-size: 10px;
+      letter-spacing: .12em;
+      cursor: pointer;
+      transition: transform .24s cubic-bezier(.2,.8,.2,1), border-color .24s ease, background .24s ease, color .24s ease;
+    }
+    button:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(212,175,55,.55); }
+    button:active:not(:disabled) { transform: translateY(0) scale(.985); }
+    button:disabled { cursor: not-allowed; opacity: .38; }
+    button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    .gold-button { border-color: var(--gold); background: var(--gold); color: #17150d; font-weight: 500; }
+    .gold-button:hover:not(:disabled) { background: #e3c35a; color: #111; }
+    .rose-button { border-color: rgba(232,160,160,.48); color: var(--rose); }
+    .subtle-button { color: var(--muted); }
+    .wide { width: 100%; }
+    .setup-actions { display: grid; gap: 10px; margin-top: 19px; }
+    .fine-print { margin: 15px 0 0; color: var(--muted); font-size: 9px; line-height: 1.7; text-align: center; }
+    .notice { min-height: 18px; margin: 9px 0 0; color: var(--rose); font-size: 10px; line-height: 1.6; }
+    .adult-bar { display: flex; justify-content: center; margin-top: 15px; }
+    .adult-state { color: var(--rose); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+    .adult-tools { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .adult-tools.visible { display: block; animation: rise .35s ease both; }
+    .adult-tools label, .modal label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    .adult-tools .add-row { display: grid; grid-template-columns: 1fr auto; margin-top: 9px; }
+    .adult-picker { display: grid; gap: 9px; }
+    .adult-picker label { margin-top: 6px; color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    #customQuestionForm { display: grid; gap: 9px; }
+    .question-composer { display: grid; gap: 9px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); animation: rise .3s ease both; }
+    .question-composer label { color: var(--muted); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
+    .composer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+
+    .turn-head { margin-bottom: 21px; text-align: center; }
+    .turn-count { margin-bottom: 9px; color: var(--muted); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; }
+    .question-progress { display: inline-block; margin: 0 0 14px; padding: 7px 11px; border: 1px solid rgba(212,175,55,.2); color: var(--gold); font-size: 9px; letter-spacing: .1em; }
+    .active-name { margin: 0; color: var(--text); font-size: clamp(27px, 7vw, 40px); font-weight: 250; letter-spacing: .11em; }
+    .turn-hint { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+    .room-code-card {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      margin: 17px 0 18px;
+      padding: 18px 16px;
+      border: 1px solid rgba(212,175,55,.34);
+      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.11), transparent 72%), rgba(9,9,13,.35);
+      text-align: center;
+    }
+    .room-code-label { margin: 0; color: var(--gold); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; }
+    .room-code-value {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(36px, 10vw, 46px);
+      font-weight: 400;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: .14em;
+      line-height: 1;
+    }
+    #onlineCopyCode { min-height: 35px; padding: 0 14px; font-size: 9px; }
+    .room-code-hint { max-width: 310px; text-align: center; }
+    .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .mode-button { min-height: 76px; flex-direction: column; gap: 8px; border-color: rgba(212,175,55,.27); background: rgba(255,255,255,.025); }
+    .mode-button .mode-icon { color: var(--gold); font-size: 17px; }
+    .mode-button .mode-name { font-size: 9px; line-height: 1.45; letter-spacing: .08em; text-align: center; }
+    .choice-panel { display: none; margin-top: 12px; }
+    .choice-panel.visible { display: block; animation: rise .3s ease both; }
+    .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .choice-button { min-height: 54px; border-color: rgba(232,160,160,.32); color: var(--rose); }
+    .choice-button:hover { border-color: var(--rose) !important; background: rgba(232,160,160,.06); }
+    .prompt-picker { display: grid; gap: 10px; margin-top: 12px; animation: rise .3s ease both; }
+    .prompt-picker label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+    .prompt-picker select { min-height: 48px; }
+    .picker-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .picker-note { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
+
+    .card-stage { perspective: 1100px; }
+    .question-card {
+      position: relative;
+      display: flex;
+      min-height: 215px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 18px;
+      padding: 29px;
+      overflow: hidden;
+      border: 1px solid rgba(212,175,55,.28);
+      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.09), transparent 63%), linear-gradient(145deg, rgba(30,29,36,.98), rgba(18,18,24,.98));
+      text-align: center;
+      transform: rotateX(8deg) translateY(12px);
+      opacity: 0;
+      transition: transform .65s cubic-bezier(.2,.8,.2,1), opacity .55s ease, border-color .4s ease;
+    }
+    .question-card.visible { transform: rotateX(0) translateY(0); opacity: 1; }
+    .question-card::before, .question-card::after { position: absolute; width: 36px; height: 36px; border-color: rgba(212,175,55,.52); border-style: solid; content: ""; }
+    .question-card::before { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
+    .question-card::after { right: 10px; bottom: 10px; border-width: 0 1px 1px 0; }
+    .card-content { width: 100%; }
+    .card-label { margin: 0 0 17px; color: var(--gold); font-size: 9px; letter-spacing: .28em; text-transform: uppercase; }
+    .card-player { margin: 0 0 12px; color: var(--rose); font-size: 11px; letter-spacing: .14em; }
+    .question-text { margin: 0 auto; max-width: 400px; font-size: clamp(17px, 4.5vw, 23px); font-weight: 300; line-height: 1.65; letter-spacing: .035em; }
+    .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px; }
+    .card-actions.single { grid-template-columns: 1fr; }
+    .response-box { display: grid; gap: 8px; margin-top: 14px; }
+    .response-box label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+    .response-box textarea { min-height: 74px; }
+    .response-note { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
+    .answers { display: grid; gap: 8px; margin-top: 20px; }
+    .answer-button { min-height: 47px; justify-content: space-between; padding: 8px 12px; text-align: left; line-height: 1.45; letter-spacing: .035em; }
+    .answer-button.selected { border-color: var(--gold); background: rgba(212,175,55,.08); }
+    .vote-count { flex: 0 0 auto; color: var(--gold); font-size: 10px; }
+    .qcm-help { margin: 13px 0 0; color: var(--muted); font-size: 9px; line-height: 1.7; text-align: center; }
+    .result-banner { display: none; margin: 12px 0 0; padding: 11px; border: 1px solid rgba(212,175,55,.25); color: var(--gold); font-size: 10px; line-height: 1.6; text-align: center; }
+    .result-banner.visible { display: block; animation: rise .35s ease both; }
+    .turn-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
+    .turn-footer button { min-height: 37px; padding: 0 10px; font-size: 8px; }
+    .back-button { color: var(--muted); }
+
+    .recap-list { display: grid; gap: 9px; margin: 21px 0; padding: 0; list-style: none; }
+    .recap-list li { padding: 13px 14px; border-left: 1px solid var(--gold); background: rgba(255,255,255,.03); color: #d8d3d6; font-size: 11px; line-height: 1.7; }
+    .recap-list strong { color: var(--rose); font-weight: 400; }
+    .empty-recap { color: var(--muted); font-size: 11px; line-height: 1.8; text-align: center; }
+    .recap-buttons { display: grid; gap: 9px; }
+
+    .modal-backdrop { position: fixed; z-index: 4; inset: 0; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(5,5,8,.78); backdrop-filter: blur(7px); }
+    .modal-backdrop.visible { display: flex; animation: fade .25s ease both; }
+    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+    .modal { width: min(100%, 390px); padding: 26px; border: 1px solid var(--line); background: #17171e; box-shadow: 0 25px 90px rgba(0,0,0,.5); animation: rise .3s ease both; }
+    .modal h2 { margin-bottom: 8px; font-size: 20px; }
+    .modal p { margin-bottom: 17px; color: var(--muted); font-size: 10px; line-height: 1.7; }
+    .modal input { margin-bottom: 10px; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 11px; }
+    .modal .notice { margin-top: 0; }
+    footer { position: relative; z-index: 1; margin-top: 18px; color: #77737a; font-size: 8px; letter-spacing: .18em; text-align: center; text-transform: uppercase; }
+
+    @media (max-width: 500px) {
+      .shell { padding: 30px 16px 25px; }
+      .topline { top: 17px; left: 17px; right: 17px; font-size: 8px; }
+      main { padding-top: 48px; }
+      .panel { padding: 18px 15px; }
+      .mode-grid { grid-template-columns: 1fr; }
+      .mode-button { min-height: 49px; flex-direction: row; }
+      .question-card { min-height: 190px; padding: 24px 20px; }
+      .turn-footer { flex-wrap: wrap; }
+      .picker-actions { grid-template-columns: 1fr; }
+      .composer-actions { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="ambience" aria-hidden="true"></canvas>
+  <div class="shell">
+    <div class="topline"><span class="mark">E N</span><span>Une soirée, vos règles</span></div>
+    <main>
+      <section class="view active" id="setupView">
+        <p class="intro">Un jeu pour se rapprocher</p>
+        <h1>ENTRE NOUS</h1>
+        <p class="lead">Des questions, des histoires et quelques surprises. Installez-vous, passez le téléphone, profitez du moment.</p>
+        <div class="panel">
+          <div class="section-head">
+            <h2>Qui joue ce soir ?</h2>
+            <span class="count" id="playerCount">0 / 12</span>
+          </div>
+          <ul class="player-list" id="playerList"></ul>
+          <form class="add-row" id="playerForm">
+            <input id="playerInput" maxlength="24" autocomplete="off" placeholder="Un prénom…" aria-label="Prénom du joueur">
+            <button class="gold-button" type="submit">Ajouter</button>
+          </form>
+          <p class="notice" id="setupNotice" role="status"></p>
+          <div class="setup-actions">
+            <button class="gold-button wide" id="playButton" type="button">Jouer</button>
+          </div>
+          <div class="adult-bar">
+            <button class="rose-button" id="adultButton" type="button">Mode 18+ · ouvrir la page dédiée</button>
+          </div>
+          <div class="adult-tools visible">
+            <p class="picker-note">Jouer sur plusieurs téléphones</p>
+            <form class="adult-picker" id="roomForm">
+              <label for="roomCode">Code de la salle (laisser vide pour en créer une)</label>
+              <input id="roomCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres">
+              <button class="gold-button wide" type="submit">Créer / rejoindre une salle</button>
+            </form>
+            <p class="notice" id="roomNotice" role="status"></p>
+          </div>
+          <p class="fine-print">Chacun peut passer son tour. Le plus important : que tout le monde soit à l'aise.</p>
+        </div>
+      </section>
+
+      <section class="view" id="adultView" aria-live="polite">
+        <p class="intro">Page dédiée · réservé aux adultes</p>
+        <h1 style="font-size:clamp(38px,9vw,60px)">MODE 18+</h1>
+        <p class="lead">Choisis une catégorie, sélectionne une question chaude ou écris la vôtre. La question est montrée au joueur dont c'est le tour.</p>
+        <div class="turn-head">
+          <p class="turn-count" id="adultTurnCount">Tour 01</p>
+          <p class="question-progress" id="adultQuestionProgress">Questions posées : 0 · Réponses : 0</p>
+          <h2 class="active-name" id="adultActiveName"></h2>
+        </div>
+        <div class="panel">
+          <div class="adult-picker">
+            <label for="adultCategory">Catégorie</label>
+            <select id="adultCategory">
+              <option value="truth">Vérité chaude</option>
+              <option value="action">Action sensuelle</option>
+              <option value="consequence">Conséquence</option>
+            </select>
+            <label for="adultPromptSelect">Question à poser</label>
+            <select id="adultPromptSelect"></select>
+            <p class="picker-note" id="adultPoolCount"></p>
+            <button class="rose-button wide" id="adultAskButton" type="button">Poser cette question</button>
+          </div>
+          <div class="adult-tools visible">
+            <label for="customQuestion">Ajouter votre question à la bibliothèque</label>
+            <form id="customQuestionForm">
+              <textarea id="customQuestion" maxlength="220" placeholder="Écris une question…"></textarea>
+              <button class="rose-button wide" type="submit">Enregistrer la question</button>
+            </form>
+            <p class="fine-print">Les questions enregistrées restent sur cet appareil. Tout le monde peut passer ou refuser un défi.</p>
+          </div>
+          <div class="card-stage" id="adultCardStage"></div>
+          <div class="turn-footer">
+            <button class="back-button" id="adultBackToPicker" type="button" hidden>← Retour aux questions</button>
+            <button class="subtle-button" id="adultEndButton" type="button">Terminer la soirée</button>
+            <button class="subtle-button" id="adultBackHome" type="button">← Retour à l'accueil</button>
+            <button class="subtle-button" id="adultLockButton" type="button">Verrouiller le mode 18+</button>
+          </div>
+          <p class="notice" id="adultNotice" role="status"></p>
+        </div>
+      </section>
+
+      <section class="view" id="gameView" aria-live="polite">
+        <div class="turn-head">
+          <p class="turn-count" id="turnCount">Tour 01</p>
+          <p class="question-progress" id="questionProgress" aria-live="polite">Questions posées : 0 · Réponses : 0</p>
+          <h2 class="active-name" id="activeName"></h2>
+          <p class="turn-hint" id="turnHint">Choisis le genre de moment que tu veux partager.</p>
+        </div>
+        <div class="panel">
+          <div class="mode-grid" id="modeGrid">
+            <button class="mode-button" data-mode="av" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action ou vérité</span></button>
+            <button class="mode-button" data-mode="vc" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité ou conséquence</span></button>
+            <button class="mode-button" data-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Question à choix</span></button>
+            <button class="mode-button" data-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
+            <button class="mode-button" data-mode="guessWho" type="button"><span class="mode-icon">?</span><span class="mode-name">Devine qui</span></button>
+          </div>
+          <div class="choice-panel" id="choicePanel">
+            <div class="choice-grid" id="choiceGrid"></div>
+          </div>
+          <div class="card-stage" id="cardStage"></div>
+          <div class="turn-footer">
+            <button class="back-button" id="backToModes" type="button">← Choisir un autre mode</button>
+            <button class="subtle-button" id="endButton" type="button">Terminer la soirée</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="onlineView" aria-live="polite">
+        <p class="intro">Partie en réseau</p>
+        <div class="turn-head">
+          <p class="turn-count" id="onlineRoomTitle">Salle · ------</p>
+          <p class="question-progress" id="onlineConnection">Connexion en cours…</p>
+          <h2 class="active-name" id="onlineActiveName"></h2>
+          <p class="turn-hint" id="onlineTurnHint"></p>
+        </div>
+        <div class="panel">
+          <div class="section-head"><h2>Joueurs</h2><span class="count" id="onlinePlayerCount"></span></div>
+          <div class="online-identity">
+            <label for="onlineName">Votre nom dans la salle</label>
+            <form class="add-row" id="onlineNameForm">
+              <input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Choisissez votre nom">
+              <button class="subtle-button" type="submit">Valider</button>
+            </form>
+            <p class="picker-note">Vous pouvez changer ce nom à tout moment.</p>
+          </div>
+          <ul class="player-list" id="onlinePlayers"></ul>
+          <div id="onlineLobby">
+            <div class="room-code-card">
+              <p class="room-code-label" id="onlineRoomCodeLabel">Code de la salle</p>
+              <p class="room-code-value" id="onlineRoomCode" aria-label="Code de la salle à 6 chiffres">------</p>
+              <button class="subtle-button" id="onlineCopyCode" type="button">Copier le code</button>
+              <p class="picker-note room-code-hint">Vos amis ouvrent le jeu, entrent ce code puis choisissent leur nom.</p>
+            </div>
+            <p class="picker-note">La partie attend que l'hôte la lance.</p>
+            <button class="gold-button wide" id="onlineStart" type="button" hidden>Lancer la partie</button>
+          </div>
+          <div id="onlineGame" hidden>
+            <div class="mode-grid" id="onlineModes">
+              <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité</span></button>
+              <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action</span></button>
+              <button class="mode-button" data-online-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Vote QCM</span></button>
+              <button class="mode-button" data-online-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
+              <button class="mode-button" data-online-mode="guessWho" type="button"><span class="mode-icon">?</span><span class="mode-name">Devine qui</span></button>
+              <button class="mode-button" data-online-mode="adult" type="button"><span class="mode-icon">18+</span><span class="mode-name">Mode 18+</span></button>
+            </div>
+            <div class="card-stage" id="onlineCard"></div>
+            <div class="adult-tools" id="onlineAdultTools" hidden>
+              <form id="onlineCustomQuestionForm">
+                <label for="onlineCustomCategory">Catégorie 18+ et des questions personnalisées</label>
+                <select id="onlineCustomCategory" aria-label="Catégorie de la question personnalisée">
+                  <option value="truth">Vérité chaude</option>
+                  <option value="action">Action sensuelle</option>
+                  <option value="consequence">Conséquence</option>
+                </select>
+                <textarea id="onlineCustomQuestion" maxlength="220" placeholder="Écris une question…"></textarea>
+                <button class="rose-button wide" type="submit">Enregistrer sur le serveur</button>
+              </form>
+              <p class="picker-note" id="onlineCustomCount"></p>
+            </div>
+            <div class="adult-tools" id="onlineDebug" hidden>
+              <p class="picker-note">Menu debug</p>
+              <div class="picker-actions">
+                <button class="subtle-button" id="debugNext" type="button">Tour suivant</button>
+                <button class="subtle-button" id="debugAdult" type="button">Débloquer 18+</button>
+                <button class="subtle-button" id="debugHistory" type="button">Vider l'historique</button>
+                <button class="subtle-button" id="debugPlayer" type="button">Changer de joueur</button>
+              </div>
+            </div>
+          </div>
+          <p class="notice" id="onlineNotice" role="status"></p>
+          <div class="turn-footer">
+            <button class="subtle-button" id="onlineLeave" type="button">Quitter la salle</button>
+            <button class="subtle-button" id="onlineEnd" type="button" hidden>Terminer la soirée</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="view" id="recapView">
+        <p class="intro">Les moments partagés</p>
+        <h1 style="font-size:clamp(34px,8vw,54px)">C'ÉTAIT BEAU.</h1>
+        <p class="lead" id="recapSummary"></p>
+        <div class="panel">
+          <div class="section-head"><h2>Petits souvenirs</h2><span class="count" id="recapCount"></span></div>
+          <ul class="recap-list" id="recapList"></ul>
+          <p class="empty-recap" id="emptyRecap">Le plus beau souvenir est peut-être encore à raconter.</p>
+          <div class="recap-buttons">
+            <button class="gold-button wide" id="replayButton" type="button">Rejouer</button>
+            <button class="subtle-button wide" id="homeButton" type="button">Modifier les joueurs</button>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer>Une parenthèse entre amis · prenez soin les uns des autres</footer>
+  </div>
+
+  <div class="modal-backdrop" id="codeModal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
+    <form class="modal" id="codeForm">
+      <h2 id="codeTitle">Un petit code entre nous</h2>
+      <p>Le mode 18+ propose des questions plus intimes. Vous pouvez toujours passer votre tour.</p>
+      <label for="accessCode">Code d'accès</label>
+      <input id="accessCode" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••">
+      <p class="notice" id="codeNotice" role="status"></p>
+      <div class="modal-actions">
+        <button class="subtle-button" id="cancelCode" type="button">Annuler</button>
+        <button class="gold-button" type="submit">Déverrouiller</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // Prompt libraries are deliberately gentle; every challenge can be skipped.
+      const questions = {
+        truth: [
+          "Quel petit détail peut instantanément te mettre de bonne humeur ?",
+          "Quelle rencontre t'a le plus surpris·e ?",
+          "Quelle chanson connais-tu par cœur sans l'avouer ?",
+          "De quoi es-tu plus fier·e que tu ne le dis ?",
+          "Quel rêve aimerais-tu réaliser dans les deux prochaines années ?",
+          "Quelle première impression as-tu eue de la personne à ta gauche ?",
+          "Quelle gentillesse n'as-tu jamais oubliée ?",
+          "Quelle habitude aimerais-tu prendre ?",
+          "Quel talent inutile aimerais-tu posséder ?",
+          "Quel endroit te donne immédiatement l'impression d'être chez toi ?",
+          "Quelle décision spontanée s'est révélée excellente ?",
+          "Quel personnage fictif te ressemble un peu trop ?",
+          "Qu'est-ce qui te fait rire à tous les coups ?",
+          "Quelle chose as-tu apprise sur toi récemment ?",
+          "Quel compliment aimerais-tu recevoir plus souvent ?",
+          "Quelle tradition aimerais-tu inventer avec tes proches ?",
+          "Quel plat pourrait te convaincre de traverser la ville ?",
+          "Quel souvenir d'enfance te réchauffe encore le cœur ?",
+          "Qu'aimerais-tu oser essayer, juste une fois ?",
+          "Quel est ton meilleur souvenir de voyage ?",
+          "Quelle petite chose te semble incroyablement romantique ?",
+          "Quelle qualité admires-tu chez la personne en face de toi ?",
+          "Si tu pouvais revivre une journée, laquelle choisirais-tu ?",
+          "Quel conseil donnerais-tu à ton toi d'il y a cinq ans ?",
+          "Quelle chose te calme après une longue journée ?",
+          "Quelle opinion légère défendras-tu toujours avec passion ?",
+          "Quel film aimerais-tu découvrir à nouveau pour la première fois ?",
+          "Quel projet te donne envie de te lever le matin ?",
+          "Quelle activité te fait perdre la notion du temps ?",
+          "De quoi aimerais-tu qu'on se souvienne de toi ?"
+        ],
+        action: [
+          "Fais un compliment sincère à la personne de ton choix.",
+          "Imite une célébrité ; le groupe doit deviner laquelle.",
+          "Raconte une histoire en utilisant trois mots choisis par le groupe.",
+          "Fais deviner un film en le mimant, sans parler.",
+          "Fredonne une chanson jusqu'à ce que quelqu'un la reconnaisse.",
+          "Fais un toast improvisé à cette soirée.",
+          "Décris chaque personne ici avec un seul mot bienveillant.",
+          "Raconte ton meilleur souvenir en trente secondes chrono.",
+          "Fais ta meilleure imitation d'un animal choisi par le groupe.",
+          "Invente un titre de film pour la soirée et explique l'affiche.",
+          "Fais deviner un métier en mime.",
+          "Laisse le groupe choisir un mot que tu devras placer dans ta prochaine phrase.",
+          "Fais une mini-déclaration d'amour à ton dessert préféré.",
+          "Raconte une anecdote en commençant par « Je ne pensais jamais dire ça… »",
+          "Trouve trois points communs avec la personne de ton choix.",
+          "Décris tes vacances de rêve comme la bande-annonce d'un film.",
+          "Fais une pose de couverture de magazine pendant cinq secondes.",
+          "Invente un nouveau nom pour le groupe.",
+          "Fais deviner une émotion uniquement avec ton visage.",
+          "Choisis quelqu'un et inventez ensemble une poignée de main.",
+          "Présente la personne à ta droite comme une invitée d'honneur.",
+          "Fais un compliment à toi-même, sans plaisanter.",
+          "Décris ta journée comme un bulletin météo.",
+          "Invente un slogan publicitaire pour la personne à ta gauche.",
+          "Choisis un objet dans la pièce et raconte son origine imaginaire.",
+          "Fais le bruitage d'une scène de film d'action.",
+          "Donne un nom et un superpouvoir à votre groupe.",
+          "Décris la soirée en trois emojis, puis justifie-les.",
+          "Fais un discours de remerciement de dix secondes.",
+          "Mime ta façon de célébrer une excellente nouvelle."
+        ],
+        consequence: [
+          "Laisse le groupe choisir ta prochaine chanson d'ambiance.",
+          "Pendant un tour, réponds en faisant une rime si tu peux.",
+          "Échange ta place avec la personne qui a le même mois d'anniversaire que toi.",
+          "Laisse quelqu'un te donner un surnom gentil pour le reste de la partie.",
+          "Raconte ta dernière bonne nouvelle avec le plus de suspense possible.",
+          "Pendant une minute, sois le commentateur sportif de la soirée.",
+          "Choisis une personne : elle pose la prochaine question à ta place.",
+          "Fais un mini-discours en défendant ton goûter préféré.",
+          "Échange un fait amusant sur toi avec la personne de ton choix.",
+          "Laisse le groupe choisir un thème pour ta prochaine anecdote.",
+          "Jusqu'au prochain tour, termine tes phrases par « quelle aventure ».",
+          "Fais une recommandation de livre, série ou film au groupe.",
+          "Improvise un jingle pour un objet présent dans la pièce.",
+          "Choisis un mot interdit pour toi jusqu'à ton prochain tour.",
+          "Raconte un moment drôle sans prononcer la lettre « e ».",
+          "Laisse quelqu'un choisir un emoji qui te représente ce soir.",
+          "Fais une présentation très sérieuse de ton snack idéal.",
+          "Donne à chaque personne un nom de code de film d'espionnage.",
+          "Pendant trente secondes, défends une opinion complètement inoffensive.",
+          "Demande au groupe une question à laquelle tu aimerais répondre.",
+          "Fais une mini-interview de la personne de ton choix.",
+          "Trouve un conseil de vie dans l'objet le plus proche de toi.",
+          "Raconte un souvenir heureux comme si c'était une épopée héroïque.",
+          "Laisse le groupe te choisir un partenaire pour le prochain mime.",
+          "Explique ton petit-déjeuner idéal comme un critique gastronomique.",
+          "Fais un salut royal à toute l'assemblée.",
+          "Invente une devise pour l'équipe de ce soir.",
+          "Fais deviner ton humeur en ne disant que trois mots.",
+          "Choisis quelqu'un pour partager un souvenir avec toi.",
+          "Remercie sincèrement une personne ici pour une qualité qu'elle a."
+        ],
+        qcm: [
+          { question: "Pour une escapade improvisée, tu choisis…", options: ["Une cabane au calme", "Une ville inconnue", "La mer au coucher du soleil", "Un train sans destination"] },
+          { question: "La soirée parfaite commence par…", options: ["Un bon repas", "Une playlist parfaite", "Des amis réunis", "Une idée inattendue"] },
+          { question: "Quel superpouvoir serait le plus pratique ?", options: ["Se téléporter", "Parler toutes les langues", "Arrêter le temps", "Retrouver n'importe quel objet"] },
+          { question: "Quel petit luxe choisirais-tu ?", options: ["Petit-déjeuner au lit", "Un massage", "Un billet première classe", "Un jour de repos en plus"] },
+          { question: "Pour choisir un film, tu préfères…", options: ["La comédie", "Le mystère", "L'aventure", "Le documentaire"] },
+          { question: "Quel animal ferait le meilleur compagnon d'aventure ?", options: ["Un renard", "Un corbeau", "Un chat", "Un cheval"] },
+          { question: "Le meilleur moment de la journée ?", options: ["Le matin tranquille", "La pause déjeuner", "L'heure dorée", "La nuit calme"] },
+          { question: "Quelle compétence apprendre instantanément ?", options: ["Jouer du piano", "Cuisiner comme un chef", "Dessiner", "Danser"] },
+          { question: "Quel thème pour une soirée ?", options: ["Cinéma", "Voyage", "Années 90", "Tenue chic"] },
+          { question: "Quelle météo pour des vacances idéales ?", options: ["Grand soleil", "Orage au coin du feu", "Brise marine", "Neige et chocolat chaud"] },
+          { question: "Quel objet emporter sur une île déserte ?", options: ["Un livre", "Un couteau suisse", "Une guitare", "Un carnet"] },
+          { question: "La meilleure façon de célébrer ?", options: ["Un grand dîner", "Une petite fête", "Une escapade", "Un moment à deux"] },
+          { question: "Tu gagnes une journée libre : tu…", options: ["Dors longtemps", "Pars explorer", "Appelles un proche", "Ne prévois rien"] },
+          { question: "Quelle saveur te ressemble aujourd'hui ?", options: ["Sucré", "Épicé", "Acidulé", "Réconfortant"] },
+          { question: "Quel décor pour écrire une histoire ?", options: ["Un café pluvieux", "Une île mystérieuse", "Un train de nuit", "Un jardin secret"] },
+          { question: "Quel cadeau te touche le plus ?", options: ["Une lettre", "Une expérience", "Un objet choisi avec soin", "Du temps partagé"] },
+          { question: "Quel instrument essayerais-tu ?", options: ["Le piano", "La batterie", "Le violoncelle", "La guitare"] },
+          { question: "Pour une promenade, tu préfères…", options: ["Une forêt", "Un vieux quartier", "La côte", "La campagne"] },
+          { question: "Quelle soirée choisir ?", options: ["Jeux de société", "Concert", "Dîner aux chandelles", "Improvisation totale"] },
+          { question: "Quel talent d'équipe manque au groupe ?", options: ["Organisateur·rice", "Photographe", "DJ", "Chef cuisinier"] },
+          { question: "Quel objet magique t'intrigue le plus ?", options: ["Une carte sans fin", "Une montre à remonter le temps", "Un miroir qui parle", "Une clé mystérieuse"] },
+          { question: "Quelle odeur évoque le mieux les vacances ?", options: ["La mer", "Le pin", "Les agrumes", "La pluie d'été"] },
+          { question: "Quel thème pour une conversation ?", options: ["Les voyages rêvés", "Les petits bonheurs", "Les souvenirs drôles", "Les projets secrets"] },
+          { question: "Dans une équipe de braquage de film, tu serais…", options: ["Le cerveau", "L'artiste", "Le pilote", "La personne qui improvise"] },
+          { question: "Quelle boisson pour trinquer ce soir ?", options: ["Un thé parfumé", "Un cocktail fruité", "Une limonade", "Quelque chose de pétillant"] },
+          { question: "Tu choisis une porte mystérieuse : derrière…", options: ["Une bibliothèque oubliée", "Un jardin éclairé", "Une fête privée", "Une destination surprise"] },
+          { question: "Quel objet résume ton humeur ?", options: ["Une couverture douce", "Des lunettes de soleil", "Un carnet neuf", "Une boussole"] },
+          { question: "Pour un week-end, tu préfères…", options: ["L'improvisation", "Un programme précis", "Une seule belle activité", "Ne rien décider"] },
+          { question: "Quelle qualité d'ami est la plus précieuse ?", options: ["La franchise", "L'humour", "La présence", "La curiosité"] },
+          { question: "Quel vœu ferais-tu pour ce groupe ?", options: ["Plus de voyages", "Plus de fous rires", "Plus de retrouvailles", "Plus de souvenirs"]
+          }
+        ],
+        adultTruth: [
+          "Quel fantasme romantique ou sensuel gardes-tu d'habitude pour toi ? Tu peux rester vague.",
+          "Quelle est la chose la plus audacieuse que tu aies faite pour séduire quelqu'un ?",
+          "Décris ton idéal de rendez-vous sensuel en une phrase.",
+          "Quel détail chez quelqu'un te fait immédiatement de l'effet ?",
+          "Quelle tension de flirt t'a déjà fait perdre le fil de la conversation ?",
+          "Quel compliment te ferait rougir même si tu essayais de le cacher ?",
+          "Quelle tenue te donne le sentiment d'être irrésistible ?",
+          "As-tu déjà eu un crush inattendu ? Raconte sans citer son nom.",
+          "Quel serait ton rendez-vous romantique idéal, du premier regard au dernier au revoir ?",
+          "Qu'est-ce qui rend une personne irrésistible à tes yeux ?",
+          "Dans un jeu de séduction consenti, préfères-tu mener la danse ou te laisser surprendre ?",
+          "Quel genre de flirt te plaît : subtil, direct, joueur ou mystérieux ?",
+          "Quel geste tendre, avec ton accord, te ferait fondre ?",
+          "As-tu déjà eu un coup de foudre ? Qu'est-ce qui t'a marqué·e ?",
+          "Quelle chanson mettrait l'ambiance à un rendez-vous qui fait monter la tension ?",
+          "Quel est ton talent secret pour faire comprendre que quelqu'un te plaît ?",
+          "Qu'est-ce qui te fait te sentir désiré·e, respecté·e et en confiance ?",
+          "Quelle personnalité célèbre t'a déjà fait craquer, et pourquoi ?",
+          "Quelle attention romantique t'a donné des papillons dans le ventre ?",
+          "Quel genre de regard te déstabilise agréablement ?",
+          "Quel trait de caractère te charme plus que l'apparence ?",
+          "As-tu déjà pris l'initiative alors que tu hésitais ?",
+          "Quel jeu de pouvoir léger et consenti t'intrigue : choisir une chanson, guider une danse ou faire durer le suspense ?",
+          "Quelle est ta façon préférée de montrer ton intérêt sans dire un mot ?",
+          "Quel scénario de rencontre te ferait sourire et rougir à la fois ?",
+          "Quel est le message de flirt le plus réussi que tu aies reçu ?",
+          "Quelle limite ou quel signe de confiance rend l'intimité plus agréable pour toi ?",
+          "Quel type de rendez-vous te fait te sentir le plus séduisant·e ?",
+          "Qu'est-ce qui transforme une attirance en vraie complicité ?",
+          "Quelle question sensuelle, mais respectueuse, aimerais-tu qu'on te pose ?"
+        ],
+        adultAction: [
+          "Choisis un·e volontaire et échangez un compliment de séduction, seulement si vous en avez envie.",
+          "Murmure une phrase de flirt inventée à voix haute — sans viser quelqu'un en particulier.",
+          "Décris ton rendez-vous idéal comme la bande-annonce d'un film sensuel, sans détails explicites.",
+          "Fais un toast à la personne ici qui a le charme le plus discret.",
+          "Raconte ta technique de flirt la plus maladroite avec un aplomb irrésistible.",
+          "Laisse le groupe choisir un mot doux à glisser dans ta prochaine phrase.",
+          "Décris ton type idéal en trois indices, sans nommer personne dans la pièce.",
+          "Avec une personne volontaire, joue le ou la maître·sse du jeu : propose deux poses glamour, avec le droit de passer.",
+          "Invente le titre d'un roman de séduction inspiré de cette soirée.",
+          "Propose une playlist de trois chansons pour faire monter doucement la tension d'un rendez-vous.",
+          "Échange un regard complice de trois secondes avec une personne volontaire, puis détourne les yeux avec panache.",
+          "Fais durer le suspense cinq secondes avant de révéler le compliment que tu as choisi.",
+          "Raconte une anecdote de séduction en changeant les prénoms.",
+          "Fais une déclaration passionnée à ton dessert préféré.",
+          "Choisis un·e volontaire et inventez le nom d'un cocktail qui vous ressemble.",
+          "Mime ta réaction quand ton crush t'envoie un message.",
+          "Fais-toi un compliment avec une assurance irrésistible.",
+          "Donne un conseil de séduction joueur et respectueux au groupe.",
+          "Décris ton rendez-vous rêvé uniquement avec des emojis, puis traduis-les.",
+          "Fais deviner ton plus grand charme en trois gestes, sans toucher personne.",
+          "Inventez ensemble une rencontre de comédie romantique, une phrase chacun.",
+          "Décris la personne de ton choix comme le personnage principal d'une romance, avec son accord.",
+          "Choisis une chanson qui résume ta vie amoureuse et fredonne le refrain.",
+          "Fais une révérence galante à une personne volontaire.",
+          "Invente un premier message de flirt charmant, sans l'envoyer à personne.",
+          "Présente ton toi célibataire comme une annonce de rencontre très élégante.",
+          "Joue une scène de rencontre dans un café avec un volontaire, chacun peut arrêter la scène.",
+          "Fais un compliment sur le style d'une personne qui est d'accord.",
+          "Décris ton aura de rendez-vous en trois mots délicieusement suggestifs.",
+          "Invente une réplique de séduction qui fait monter la tension sans mettre la pression."
+        ],
+        adultConsequence: [
+          "Choisis : recevoir un compliment ou en offrir un à une personne volontaire.",
+          "Raconte une anecdote de flirt en gardant tous les prénoms secrets.",
+          "Le groupe choisit une chanson de slow imaginaire ; improvise deux pas si tu en as envie.",
+          "Choisis un titre galant pour la personne de ton choix, uniquement si elle est d'accord.",
+          "Décris ton rendez-vous de rêve sans utiliser les mots « dîner » ni « cinéma ».",
+          "Propose à une personne volontaire un duel de regards de trois secondes ; elle peut dire non sans explication.",
+          "Donne à la personne de ton choix un conseil amoureux bienveillant.",
+          "Présente une personne volontaire comme la star d'une comédie romantique.",
+          "Invente un surnom glamour pour toi-même pour le reste du tour.",
+          "Partage une chose qui te fait te sentir apprécié·e et désiré·e.",
+          "Choisis un·e volontaire et écrivez à deux le pitch d'une romance de vacances.",
+          "Fais une recommandation de chanson pour une scène de séduction au cinéma.",
+          "Raconte un joli moment de complicité, sans détails personnels que tu préfères garder privés.",
+          "Laisse le groupe inventer un titre de romance pour ta vie sentimentale.",
+          "Fais un compliment à une personne qui ne l'a pas encore reçu ce soir.",
+          "Choisis une personne volontaire et échangez une poignée de main façon film d'espionnage amoureux.",
+          "Décris l'ambiance d'un rendez-vous parfait avec seulement cinq mots.",
+          "Porte un toast au respect des limites et au charme du consentement.",
+          "Nomme trois qualités non physiques que tu trouves attirantes.",
+          "Prends le rôle de maître·sse du suspense : propose à une personne volontaire deux compliments au choix, ou le droit de passer.",
+          "Raconte ton plus grand fou rire lors d'un rendez-vous.",
+          "Donne au groupe ton meilleur conseil pour faire monter la tension sans pression.",
+          "Invente une réplique de séduction tellement élégante qu'elle en devient drôle.",
+          "Fais à toi-même le compliment que tu aimerais entendre plus souvent.",
+          "Demande à une personne volontaire quel est son rendez-vous idéal.",
+          "Offre un compliment sincère à une personne volontaire, ou passe.",
+          "Imagine un nom de parfum inspiré par ton pouvoir de séduction.",
+          "Décris ton style de flirt comme s'il s'agissait d'un plat de restaurant.",
+          "Propose un jeu de séduction léger où chacun peut choisir de passer.",
+          "Choisis : raconter une anecdote mignonne ou passer sans justification."
+        ],
+        adultQcm: [
+          { question: "Pour un rendez-vous idéal, tu préfères…", options: ["Une promenade au coucher du soleil", "Un dîner fait maison", "Une sortie surprise", "Une conversation qui dure"] },
+          { question: "Qu'est-ce qui te charme d'abord ?", options: ["Le regard", "L'humour", "La voix", "L'attention"] },
+          { question: "Quel message te ferait sourire ?", options: ["« J'ai pensé à toi »", "Une blague bien trouvée", "Une invitation spontanée", "Une chanson partagée"] },
+          { question: "Quelle ambiance pour un premier rendez-vous ?", options: ["Café tranquille", "Balade en ville", "Petit concert", "Pique-nique improvisé"] },
+          { question: "Quel geste est le plus romantique ?", options: ["Se souvenir d'un détail", "Écrire une lettre", "Préparer une surprise", "Être vraiment à l'écoute"] }
+        ]
+      };
+
+      const ACCESS_CODE = "6969";
+      const MAX_PLAYERS = 12;
+      const MIN_PLAYERS = 2;
+      const $ = selector => document.querySelector(selector);
+      const setupView = $("#setupView");
+      const adultView = $("#adultView");
+      const gameView = $("#gameView");
+      const recapView = $("#recapView");
+      const playerList = $("#playerList");
+      const playerInput = $("#playerInput");
+      const setupNotice = $("#setupNotice");
+      const codeModal = $("#codeModal");
+      const accessCodeInput = $("#accessCode");
+      const codeNotice = $("#codeNotice");
+      const views = [setupView, adultView, gameView, recapView];
+
+      let players = loadArray("players", []);
+      players = players.filter(name => typeof name === "string" && name.trim()).slice(0, MAX_PLAYERS).map(name => name.trim());
+      let customQuestions = loadArray("customQuestions", []);
+      customQuestions = customQuestions.filter(item =>
+        item && typeof item.text === "string" && typeof item.category === "string" &&
+        ["truth", "action", "consequence"].includes(item.category)
+      ).map(item => ({ text: item.text.trim().slice(0, 220), category: item.category })).filter(item => item.text);
+      let adultUnlocked = false;
+      let activeSurface = "game";
+      let playerIndex = 0;
+      let turnNumber = 1;
+      let completedTurns = 0;
+      let questionsAsked = 0;
+      let answersGiven = 0;
+      let activeMode = "";
+      let cardState = "choose";
+      let currentQuestion = null;
+      let currentCardOrigin = "game";
+      let voteCounts = [];
+      let activeVoteIndex = null;
+      let history = [];
+      let usedQuestions = new Map();
+      let backgroundWidth = 0;
+      let backgroundHeight = 0;
+      let pixelRatio = 1;
+      let ambientTime = 0;
+      let lastTime = 0;
+      let motes = [];
+      let bursts = [];
+
+      function loadArray(key, fallback) {
+        return fallback;
+      }
+
+      function saveArray(key, value) {
+        return Array.isArray(value);
+      }
+
+      function setView(view) {
+        for (const item of views) item.classList.toggle("active", item === view);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function renderPlayers() {
+        $("#playerCount").textContent = `${players.length} / ${MAX_PLAYERS}`;
+        $("#playButton").disabled = players.length < MIN_PLAYERS;
+        playerList.replaceChildren();
+        if (players.length === 0) {
+          const empty = document.createElement("li");
+          empty.className = "empty";
+          empty.textContent = "Ajoutez au moins deux joueurs pour commencer.";
+          playerList.append(empty);
+        } else {
+          players.forEach((name, index) => {
+            const row = document.createElement("li");
+            row.className = "player-row";
+            const label = document.createElement("span");
+            label.textContent = name;
+            const remove = document.createElement("button");
+            remove.type = "button";
+            remove.setAttribute("aria-label", `Retirer ${name}`);
+            remove.textContent = "×";
+            remove.addEventListener("click", () => {
+              players.splice(index, 1);
+              saveArray("players", players);
+              renderPlayers();
+            });
+            row.append(label, remove);
+            playerList.append(row);
+          });
+        }
+      }
+
+      function addPlayer(event) {
+        event.preventDefault();
+        const name = playerInput.value.trim();
+        setupNotice.textContent = "";
+        if (!name) {
+          setupNotice.textContent = "Entre un prénom pour ajouter un joueur.";
+          playerInput.focus();
+          return;
+        }
+        if (players.length >= MAX_PLAYERS) {
+          setupNotice.textContent = `La partie est limitée à ${MAX_PLAYERS} joueurs.`;
+          return;
+        }
+        if (players.some(existing => existing.toLocaleLowerCase("fr") === name.toLocaleLowerCase("fr"))) {
+          setupNotice.textContent = "Ce prénom est déjà dans la liste.";
+          playerInput.focus();
+          return;
+        }
+        players.push(name.slice(0, 24));
+        saveArray("players", players);
+        playerInput.value = "";
+        renderPlayers();
+        playerInput.focus();
+      }
+
+      function startGame(surface = "game") {
+        if (players.length < MIN_PLAYERS) {
+          setupNotice.textContent = "Ajoutez au moins deux joueurs pour commencer.";
+          return;
+        }
+        activeSurface = surface;
+        playerIndex = 0;
+        turnNumber = 1;
+        completedTurns = 0;
+        questionsAsked = 0;
+        answersGiven = 0;
+        history = [];
+        usedQuestions = new Map();
+        renderTurn();
+        setView(surface === "adult" ? adultView : gameView);
+      }
+
+      function renderTurn() {
+        $("#turnCount").textContent = `Tour ${String(turnNumber).padStart(2, "0")}`;
+        updateQuestionProgress();
+        $("#activeName").textContent = players[playerIndex];
+        $("#adultTurnCount").textContent = `Tour ${String(turnNumber).padStart(2, "0")}`;
+        $("#adultActiveName").textContent = players[playerIndex];
+        $("#adultQuestionProgress").textContent = `Questions posées : ${questionsAsked} · Réponses : ${answersGiven}`;
+        $("#turnHint").textContent = "Choisis le genre de moment que tu veux partager.";
+        $("#modeGrid").hidden = false;
+        $("#choicePanel").classList.remove("visible");
+        $("#choiceGrid").replaceChildren();
+        $("#cardStage").replaceChildren();
+        $("#backToModes").hidden = true;
+        activeMode = "";
+        cardState = "choose";
+        currentQuestion = null;
+        activeVoteIndex = null;
+        $("#adultCardStage").replaceChildren();
+        $("#adultBackToPicker").hidden = true;
+      }
+
+      function updateQuestionProgress() {
+        $("#questionProgress").textContent = `Questions posées : ${questionsAsked} · Réponses : ${answersGiven}`;
+        $("#adultQuestionProgress").textContent = `Questions posées : ${questionsAsked} · Réponses : ${answersGiven}`;
+      }
+
+      function recordMoment(text, mode) {
+        history.push({ player: players[playerIndex], text, mode });
+        if (history.length > 24) history.shift();
+      }
+
+      function poolFor(category) {
+        return [...questions[category]];
+      }
+
+      function adultPoolFor(category) {
+        const adultCategory = category === "truth" ? "adultTruth" : category === "action" ? "adultAction" : "adultConsequence";
+        return [...questions[adultCategory], ...customQuestions.filter(item => item.category === category).map(item => item.text)];
+      }
+
+      function drawQuestion(category) {
+        const pool = poolFor(category);
+        const key = `soft-${category}`;
+        let used = usedQuestions.get(key);
+        if (!used || used.size >= pool.length) {
+          used = new Set();
+          usedQuestions.set(key, used);
+        }
+        const available = pool.map((_, index) => index).filter(index => !used.has(index));
+        const index = available[Math.floor(Math.random() * available.length)];
+        used.add(index);
+        return pool[index];
+      }
+
+      function chooseMode(mode) {
+        activeMode = mode;
+        const choicePanel = $("#choicePanel");
+        const choiceGrid = $("#choiceGrid");
+        choiceGrid.replaceChildren();
+        $("#modeGrid").hidden = true;
+        $("#backToModes").hidden = false;
+        if (mode === "qcm") {
+          drawQcm();
+          return;
+        }
+        if (mode === "wouldYouRather") {
+          const pair = window.entreNousWouldYouRather[Math.floor(Math.random() * window.entreNousWouldYouRather.length)];
+          drawPromptCard(`${pair[0]} ou ${pair[1]} ?`, "Tu préfères", "game");
+          return;
+        }
+        if (mode === "guessWho") {
+          drawPromptCard("Choisis une personne du groupe et décris-la sans la nommer. Les autres devinent.", "Devine qui", "game");
+          return;
+        }
+        const choices = mode === "av"
+          ? [{ label: "Action", category: "action" }, { label: "Vérité", category: "truth" }]
+          : [{ label: "Vérité", category: "truth" }, { label: "Conséquence", category: "consequence" }];
+        choices.forEach(choice => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "choice-button";
+          button.textContent = choice.label;
+          button.addEventListener("click", () => {
+            drawPromptCard(drawQuestion(choice.category), choice.label, "game");
+          });
+          choiceGrid.append(button);
+        });
+        choicePanel.classList.add("visible");
+      }
+
+      function populateAdultQuestions() {
+        const category = $("#adultCategory").value;
+        const pool = adultPoolFor(category);
+        const select = $("#adultPromptSelect");
+        select.replaceChildren();
+        pool.forEach((text, index) => {
+          const option = document.createElement("option");
+          option.value = String(index);
+          option.textContent = `${String(index + 1).padStart(2, "0")} · ${text}`;
+          select.append(option);
+        });
+        $("#adultAskButton").disabled = pool.length === 0;
+        $("#adultPoolCount").textContent = `${pool.length} questions disponibles · tu peux en choisir une ou ajouter la tienne.`;
+      }
+
+      function cardMarkup(label, text) {
+        const article = document.createElement("article");
+        article.className = "question-card";
+        const content = document.createElement("div");
+        content.className = "card-content";
+        const tag = document.createElement("p");
+        tag.className = "card-label";
+        tag.textContent = label;
+        const player = document.createElement("p");
+        player.className = "card-player";
+        player.textContent = `À toi, ${players[playerIndex]}`;
+        const question = document.createElement("p");
+        question.className = "question-text";
+        question.textContent = text;
+        content.append(tag, player, question);
+        article.append(content);
+        return article;
+      }
+
+      function drawPromptCard(question, label, surface = activeSurface) {
+        if (players.length < MIN_PLAYERS) {
+          const notice = surface === "adult" ? $("#adultNotice") : setupNotice;
+          notice.textContent = "Ajoutez au moins deux joueurs avant de poser une question.";
+          return;
+        }
+        currentQuestion = question;
+        currentCardOrigin = surface;
+        cardState = "drawn";
+        questionsAsked++;
+        updateQuestionProgress();
+        $("#choicePanel").classList.remove("visible");
+        const stage = surface === "adult" ? $("#adultCardStage") : $("#cardStage");
+        stage.replaceChildren();
+        const card = cardMarkup(`Question ${String(questionsAsked).padStart(2, "0")} · ${label}`, question);
+        stage.append(card);
+        requestAnimationFrame(() => card.classList.add("visible"));
+        recordMoment(question, label);
+        if (surface === "adult") {
+          $("#adultBackToPicker").hidden = false;
+          $("#adultNotice").textContent = "";
+        } else {
+          $("#turnHint").textContent = "Réponds pour passer au joueur suivant. Tu peux aussi passer cette carte.";
+        }
+        const responseBox = document.createElement("div");
+        responseBox.className = "response-box";
+        const responseLabel = document.createElement("label");
+        responseLabel.textContent = label === "Action" || label === "Conséquence"
+          ? "Ta réponse ou comment tu relèves le défi"
+          : "Ta réponse";
+        const response = document.createElement("textarea");
+        response.maxLength = 500;
+        response.placeholder = "Écris ta réponse ici…";
+        response.setAttribute("aria-label", "Ta réponse à la question");
+        const note = document.createElement("p");
+        note.className = "response-note";
+        note.textContent = "Ta réponse n'est pas enregistrée et reste sur cet appareil pendant la partie.";
+        responseBox.append(responseLabel, response, note);
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const validate = makeButton("Valider ma réponse →", "gold-button", () => {
+          if (!response.value.trim()) {
+            response.focus();
+            return;
+          }
+          answersGiven++;
+          updateQuestionProgress();
+          nextTurn();
+        });
+        validate.disabled = true;
+        response.addEventListener("input", () => {
+          validate.disabled = !response.value.trim();
+        });
+        actions.append(
+          makeButton("Passer sans répondre", "subtle-button", skipCard),
+          validate
+        );
+        stage.append(responseBox, actions);
+        burstMotes(30, "#d4af37");
+      }
+
+      function drawQcm() {
+        const pool = questions.qcm;
+        const used = usedQuestions.get("soft-qcm") || new Set();
+        if (used.size >= pool.length) used.clear();
+        let index = Math.floor(Math.random() * pool.length);
+        while (used.has(index)) index = Math.floor(Math.random() * pool.length);
+        used.add(index);
+        usedQuestions.set("soft-qcm", used);
+        currentQuestion = pool[index];
+        voteCounts = currentQuestion.options.map(() => 0);
+        activeVoteIndex = null;
+        cardState = "qcm-voting";
+        questionsAsked++;
+        updateQuestionProgress();
+        $("#choicePanel").classList.remove("visible");
+        $("#turnHint").textContent = "Choisis d'abord ta réponse, puis passe le téléphone pour le vote du groupe.";
+        const stage = $("#cardStage");
+        stage.replaceChildren();
+        const card = cardMarkup(`Question ${String(questionsAsked).padStart(2, "0")} · Question au groupe`, currentQuestion.question);
+        stage.append(card);
+        requestAnimationFrame(() => card.classList.add("visible"));
+        const answers = document.createElement("div");
+        answers.className = "answers";
+        currentQuestion.options.forEach((option, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "answer-button";
+          button.setAttribute("aria-label", `Voter pour ${option}`);
+          const text = document.createElement("span");
+          text.textContent = option;
+          const count = document.createElement("span");
+          count.className = "vote-count";
+          count.textContent = "0 vote";
+          button.append(text, count);
+          button.addEventListener("click", () => {
+            voteCounts[index]++;
+            if (activeVoteIndex === null) activeVoteIndex = index;
+            count.textContent = `${voteCounts[index]} ${voteCounts[index] === 1 ? "vote" : "votes"}`;
+            button.classList.toggle("selected", activeVoteIndex === index);
+          });
+          answers.append(button);
+        });
+        stage.append(answers);
+        const composer = document.createElement("form");
+        composer.className = "question-composer";
+        const composerLabel = document.createElement("label");
+        composerLabel.textContent = "Ou écris ta propre question au clavier";
+        const composerInput = document.createElement("textarea");
+        composerInput.maxLength = 220;
+        composerInput.placeholder = "Écris une question à poser au joueur actif…";
+        composerInput.setAttribute("aria-label", "Question personnalisée à poser");
+        const composerActions = document.createElement("div");
+        composerActions.className = "composer-actions";
+        const askCustom = document.createElement("button");
+        askCustom.type = "submit";
+        askCustom.className = "gold-button";
+        askCustom.textContent = `Poser à ${players[playerIndex]}`;
+        const cancelCustom = makeButton("Retour aux modes", "subtle-button", () => {
+          $("#cardStage").replaceChildren();
+          $("#choicePanel").classList.remove("visible");
+          $("#modeGrid").hidden = false;
+          $("#backToModes").hidden = true;
+          if (history.length) history.pop();
+          questionsAsked--;
+          updateQuestionProgress();
+          cardState = "choose";
+          currentQuestion = null;
+          activeMode = "";
+        });
+        composerActions.append(cancelCustom, askCustom);
+        composer.append(composerLabel, composerInput, composerActions);
+        composer.addEventListener("submit", event => {
+          event.preventDefault();
+          const text = composerInput.value.trim();
+          if (text.length < 3) {
+            composerInput.focus();
+            return;
+          }
+          history.pop();
+          questionsAsked--;
+          drawPromptCard(text, "Question personnalisée", "game");
+        });
+        stage.append(composer);
+        const help = document.createElement("p");
+        help.className = "qcm-help";
+        help.textContent = "Le premier choix est la réponse du joueur actif. Les autres joueurs peuvent ensuite voter.";
+        stage.append(help);
+        const result = document.createElement("p");
+        result.className = "result-banner";
+        result.id = "voteResult";
+        result.setAttribute("aria-live", "polite");
+        stage.append(result);
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const validateVote = makeButton("Valider ma réponse →", "gold-button", () => {
+          if (activeVoteIndex === null) return;
+          answersGiven++;
+          updateQuestionProgress();
+          nextTurn();
+        });
+        validateVote.disabled = true;
+        for (const answerButton of answers.querySelectorAll(".answer-button")) {
+          answerButton.addEventListener("click", () => {
+            if (activeVoteIndex !== null) validateVote.disabled = false;
+          });
+        }
+        actions.append(
+          makeButton("Révéler le vote", "rose-button", revealVote),
+          validateVote
+        );
+        stage.append(actions);
+        const skipActions = document.createElement("div");
+        skipActions.className = "card-actions single";
+        skipActions.append(makeButton("Passer cette question", "subtle-button", skipCard));
+        stage.append(skipActions);
+        recordMoment(currentQuestion.question, "Question au groupe");
+        burstMotes(22, "#e8a0a0");
+      }
+
+      function makeButton(label, className, callback) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.textContent = label;
+        button.addEventListener("click", callback);
+        return button;
+      }
+
+      function revealVote() {
+        if (cardState !== "qcm-voting") return;
+        cardState = "qcm-revealed";
+        const result = $("#voteResult");
+        const max = Math.max(...voteCounts);
+        if (max === 0) {
+          result.textContent = "Pas encore de vote — vous pouvez voter, ou passer.";
+        } else {
+          const winners = voteCounts.map((count, index) => count === max ? currentQuestion.options[index] : null).filter(Boolean);
+          result.textContent = winners.length > 1
+            ? `Égalité ! Le groupe hésite entre ${winners.join(" et ")}.`
+            : `Le choix du groupe : ${winners[0]} (${max} ${max === 1 ? "vote" : "votes"}).`;
+        }
+        result.classList.add("visible");
+        $("#turnHint").textContent = "Le meilleur choix, c'est celui qui convient au groupe.";
+      }
+
+      function skipCard() {
+        if (history.length) history.pop();
+        nextTurn();
+      }
+
+      function nextTurn() {
+        completedTurns++;
+        playerIndex = (playerIndex + 1) % players.length;
+        turnNumber++;
+        renderTurn();
+      }
+
+      function finishGame() {
+        setView(recapView);
+        const rounds = completedTurns + (cardState === "choose" ? 0 : 1);
+        const questionSummary = `${questionsAsked} question${questionsAsked === 1 ? "" : "s"} posée${questionsAsked === 1 ? "" : "s"}`;
+        const answerSummary = `${answersGiven} réponse${answersGiven === 1 ? "" : "s"} donnée${answersGiven === 1 ? "" : "s"}`;
+        $("#recapSummary").textContent = `${rounds} ${rounds === 1 ? "tour partagé" : "tours partagés"} entre ${players.length} personnes · ${questionSummary} · ${answerSummary}. Merci pour la confiance et les fous rires.`;
+        $("#recapCount").textContent = `${history.length} ${history.length === 1 ? "souvenir" : "souvenirs"}`;
+        const list = $("#recapList");
+        list.replaceChildren();
+        $("#emptyRecap").hidden = history.length > 0;
+        for (const item of history.slice(-8).reverse()) {
+          const li = document.createElement("li");
+          const name = document.createElement("strong");
+          name.textContent = `${item.player} · ${item.mode}`;
+          li.append(name, document.createElement("br"), document.createTextNode(item.text));
+          list.append(li);
+        }
+      }
+
+      function openCodeModal() {
+        $("#codeNotice").textContent = "";
+        accessCodeInput.value = "";
+        codeModal.classList.add("visible");
+        accessCodeInput.focus();
+      }
+
+      function checkCode(event) {
+        event.preventDefault();
+        if (accessCodeInput.value.trim() !== ACCESS_CODE) {
+          codeNotice.textContent = "Ce n'est pas le bon code. Réessaie.";
+          accessCodeInput.select();
+          return;
+        }
+        if (players.length < MIN_PLAYERS) {
+          codeNotice.textContent = "Ajoute au moins deux joueurs à l'accueil avant d'ouvrir cette page.";
+          return;
+        }
+        adultUnlocked = true;
+        codeModal.classList.remove("visible");
+        $("#adultButton").textContent = "Ouvrir la page du mode 18+";
+        populateAdultQuestions();
+        startGame("adult");
+      }
+
+      function addCustomQuestion(event) {
+        event.preventDefault();
+        const input = $("#customQuestion");
+        const text = input.value.trim();
+        $("#adultNotice").textContent = "";
+        if (!adultUnlocked) {
+          $("#adultNotice").textContent = "Déverrouille d'abord le mode 18+.";
+          return;
+        }
+        if (text.length < 8) {
+          $("#adultNotice").textContent = "Écris une question un peu plus complète.";
+          input.focus();
+          return;
+        }
+        const item = { text: text.slice(0, 220), category: $("#adultCategory").value };
+        customQuestions.push(item);
+        if (saveArray("customQuestions", customQuestions)) {
+          input.value = "";
+          $("#adultNotice").textContent = "Question ajoutée à la bibliothèque de cette catégorie.";
+          populateAdultQuestions();
+        } else {
+          customQuestions.pop();
+          $("#adultNotice").textContent = "La question n'a pas pu être enregistrée sur cet appareil.";
+        }
+      }
+
+      function toggleAdult() {
+        if (adultUnlocked) {
+          if (players.length < MIN_PLAYERS) {
+            setupNotice.textContent = "Ajoutez au moins deux joueurs avant de jouer.";
+            return;
+          }
+          populateAdultQuestions();
+          startGame("adult");
+        } else {
+          openCodeModal();
+        }
+      }
+
+      function askAdultQuestion() {
+        if (!adultUnlocked) return;
+        const category = $("#adultCategory").value;
+        const pool = adultPoolFor(category);
+        const index = Number($("#adultPromptSelect").value);
+        if (!pool[index]) {
+          $("#adultNotice").textContent = "Choisis une question valide dans la liste.";
+          return;
+        }
+        const label = category === "truth" ? "Vérité chaude" : category === "action" ? "Action sensuelle" : "Conséquence";
+        drawPromptCard(pool[index], label, "adult");
+      }
+
+      function returnToAdultPicker() {
+        if (cardState === "drawn" && currentCardOrigin === "adult") {
+          if (history.length) history.pop();
+          questionsAsked = Math.max(0, questionsAsked - 1);
+          updateQuestionProgress();
+        }
+        $("#adultCardStage").replaceChildren();
+        $("#adultBackToPicker").hidden = true;
+        cardState = "choose";
+        currentQuestion = null;
+      }
+
+      function lockAdultMode() {
+        adultUnlocked = false;
+        $("#adultButton").textContent = "Mode 18+ · ouvrir la page dédiée";
+        $("#adultCardStage").replaceChildren();
+        $("#adultBackToPicker").hidden = true;
+        renderPlayers();
+        setView(setupView);
+      }
+
+      // Quiet ambient motes give the cards a little life without distracting from reading.
+      function resizeCanvas() {
+        const canvas = $("#ambience");
+        const rect = canvas.getBoundingClientRect();
+        backgroundWidth = rect.width;
+        backgroundHeight = rect.height;
+        pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(backgroundWidth * pixelRatio);
+        canvas.height = Math.round(backgroundHeight * pixelRatio);
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        motes = Array.from({ length: Math.max(24, Math.floor(backgroundWidth / 18)) }, () => ({
+          x: Math.random() * backgroundWidth,
+          y: Math.random() * backgroundHeight,
+          radius: Math.random() * 1.2 + .3,
+          phase: Math.random() * Math.PI * 2,
+          speed: Math.random() * .2 + .05,
+          tint: Math.random() < .72 ? "212,175,55" : "232,160,160"
+        }));
+      }
+
+      function burstMotes(count, color) {
+        const rgb = color === "#e8a0a0" ? "232,160,160" : "212,175,55";
+        const x = backgroundWidth / 2;
+        const y = backgroundHeight / 2;
+        for (let i = 0; i < count; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 70 + 18;
+          bursts.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: .8, maxLife: .8, rgb });
+        }
+      }
+
+      function animate(timestamp) {
+        const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, .04) : 0;
+        lastTime = timestamp;
+        ambientTime += dt;
+        const canvas = $("#ambience");
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        ctx.clearRect(0, 0, backgroundWidth, backgroundHeight);
+        for (const mote of motes) {
+          const opacity = .1 + (Math.sin(ambientTime * mote.speed + mote.phase) + 1) * .16;
+          const y = (mote.y - ambientTime * (2 + mote.speed * 8) + backgroundHeight) % backgroundHeight;
+          ctx.fillStyle = `rgba(${mote.tint},${opacity})`;
+          ctx.beginPath();
+          ctx.arc(mote.x, y, mote.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        bursts = bursts.filter(particle => {
+          particle.life -= dt;
+          particle.x += particle.vx * dt;
+          particle.y += particle.vy * dt;
+          const alpha = Math.max(0, particle.life / particle.maxLife);
+          ctx.fillStyle = `rgba(${particle.rgb},${alpha * .7})`;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 1.2 * alpha, 0, Math.PI * 2);
+          ctx.fill();
+          return particle.life > 0;
+        });
+        requestAnimationFrame(animate);
+      }
+
+      $("#playerForm").addEventListener("submit", addPlayer);
+      $("#playButton").addEventListener("click", startGame);
+      $("#adultButton").addEventListener("click", toggleAdult);
+      $("#customQuestionForm").addEventListener("submit", addCustomQuestion);
+      $("#adultCategory").addEventListener("change", populateAdultQuestions);
+      $("#adultAskButton").addEventListener("click", askAdultQuestion);
+      $("#adultBackToPicker").addEventListener("click", returnToAdultPicker);
+      $("#adultBackHome").addEventListener("click", () => {
+        renderPlayers();
+        setView(setupView);
+      });
+      $("#adultLockButton").addEventListener("click", lockAdultMode);
+      $("#adultEndButton").addEventListener("click", finishGame);
+      $("#codeForm").addEventListener("submit", checkCode);
+      $("#cancelCode").addEventListener("click", () => codeModal.classList.remove("visible"));
+      codeModal.addEventListener("click", event => {
+        if (event.target === codeModal) codeModal.classList.remove("visible");
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") codeModal.classList.remove("visible");
+      });
+      $("#modeGrid").addEventListener("click", event => {
+        const button = event.target.closest("[data-mode]");
+        if (button) chooseMode(button.dataset.mode);
+      });
+      $("#backToModes").addEventListener("click", () => {
+        if (["drawn", "qcm-voting", "qcm-revealed"].includes(cardState)) {
+          if (history.length) history.pop();
+          questionsAsked = Math.max(0, questionsAsked - 1);
+          updateQuestionProgress();
+        }
+        $("#turnHint").textContent = "Choisis le genre de moment que tu veux partager.";
+        $("#cardStage").replaceChildren();
+        $("#choicePanel").classList.remove("visible");
+        $("#modeGrid").hidden = false;
+        $("#backToModes").hidden = true;
+        activeMode = "";
+        cardState = "choose";
+      });
+      $("#endButton").addEventListener("click", finishGame);
+      $("#replayButton").addEventListener("click", startGame);
+      $("#homeButton").addEventListener("click", () => {
+        renderPlayers();
+        setView(setupView);
+      });
+      window.addEventListener("resize", resizeCanvas);
+
+      resizeCanvas();
+      renderPlayers();
+      requestAnimationFrame(animate);
+    })();
+  </script>
+  <script>
+    (() => {
+      "use strict";
+
+      // Les propositions réseau sont choisies dans le navigateur puis validées et partagées par le serveur.
+      const wouldYouRather = [
+        ["Vivre au bord de la mer", "Vivre à la montagne"], ["Pouvoir voler", "Pouvoir respirer sous l'eau"],
+        ["Ne plus jamais écouter de musique", "Ne plus jamais regarder de films"], ["Voyager dans le passé", "Voyager dans le futur"],
+        ["Avoir un repas gratuit par jour", "Avoir un billet de transport gratuit par jour"], ["Toujours arriver 10 minutes en avance", "Toujours arriver 10 minutes en retard"],
+        ["Parler toutes les langues", "Jouer de tous les instruments"], ["Vivre sans téléphone", "Vivre sans télévision"],
+        ["Partir en voyage sans rien planifier", "Tout planifier dans les moindres détails"], ["Avoir une mémoire parfaite", "Apprendre très vite"],
+        ["Explorer une forêt mystérieuse", "Explorer une ville inconnue"], ["Prendre un petit-déjeuner au lit", "Un dîner préparé pour toi"],
+        ["Ne voir que des comédies", "Ne voir que des films d'aventure"], ["Avoir toujours le mot juste", "Faire rire tout le monde"],
+        ["Passer une semaine en cabane", "Passer une semaine sur un bateau"], ["Connaître ton avenir", "Pouvoir changer une décision passée"],
+        ["Avoir une journée de week-end en plus", "Avoir une heure de plus chaque jour"], ["Être excellent en cuisine", "Être excellent en danse"],
+        ["Faire un grand voyage chaque année", "Faire plusieurs petites escapades"], ["Vivre dans un livre", "Vivre dans un jeu vidéo"],
+        ["Toujours trouver une place de parking", "Ne jamais faire la queue"], ["Avoir un jardin secret", "Avoir une bibliothèque immense"],
+        ["Rencontrer ton artiste préféré", "Voyager dans ton lieu préféré"], ["Faire rire quelqu'un chaque jour", "Aider quelqu'un chaque jour"],
+        ["Avoir une maison au calme", "Avoir un appartement au cœur de la ville"], ["Tout goûter", "Tout essayer comme activité"],
+        ["Te souvenir de chaque rêve", "Pouvoir choisir ton rêve"], ["Une soirée jeux entre amis", "Une soirée tranquille en petit comité"],
+        ["Un don pour raconter des histoires", "Un don pour les écouter"], ["Recommencer un film préféré", "Découvrir un nouveau film chaque soir"]
+      ];
+      window.entreNousWouldYouRather = wouldYouRather;
+      const onlinePrompts = {
+        truth: [
+          "Quel petit détail peut instantanément te mettre de bonne humeur ?",
+          "De quoi es-tu plus fier·e que tu ne le dis ?",
+          "Quel rêve aimerais-tu réaliser dans les deux prochaines années ?",
+          "Quelle qualité admires-tu chez une personne ici ?",
+          "Quel souvenir d'enfance te réchauffe encore le cœur ?",
+          "Quelle petite chose te semble incroyablement romantique ?"
+        ],
+        action: [
+          "Fais un compliment sincère à la personne de ton choix.",
+          "Fais deviner un film en le mimant, sans parler.",
+          "Raconte ton meilleur souvenir en trente secondes.",
+          "Invente un titre de film pour la soirée.",
+          "Fais deviner une émotion uniquement avec ton visage.",
+          "Fais un toast improvisé à cette soirée."
+        ],
+        qcm: [
+          { question: "Pour une escapade improvisée, tu choisis…", options: ["Une cabane au calme", "Une ville inconnue", "La mer au coucher du soleil", "Un train sans destination"] },
+          { question: "La soirée parfaite commence par…", options: ["Un bon repas", "Une playlist parfaite", "Des amis réunis", "Une idée inattendue"] },
+          { question: "Quel superpouvoir serait le plus pratique ?", options: ["Se téléporter", "Parler toutes les langues", "Arrêter le temps", "Retrouver n'importe quel objet"] },
+          { question: "Quel petit luxe choisirais-tu ?", options: ["Petit-déjeuner au lit", "Un massage", "Un billet première classe", "Un jour de repos en plus"] },
+          { question: "Quel cadeau te touche le plus ?", options: ["Une lettre", "Une expérience", "Un objet choisi avec soin", "Du temps partagé"] },
+          { question: "Quelle qualité d'ami est la plus précieuse ?", options: ["La franchise", "L'humour", "La présence", "La curiosité"] }
+        ],
+        adult: {
+          truth: [
+            "Quel fantasme romantique ou sensuel gardes-tu d'habitude pour toi ? Tu peux rester vague.",
+            "Décris ton idéal de rendez-vous sensuel en une phrase.",
+            "Quel geste tendre te fait te sentir particulièrement désiré·e ?"
+          ],
+          action: [
+            "Fais un compliment séduisant à une personne qui est d'accord pour le recevoir.",
+            "Décris avec délicatesse ton idée d'un rendez-vous romantique.",
+            "Choisis une chanson qui évoque la séduction et explique ton choix."
+          ],
+          consequence: [
+            "Raconte un moment où tu t'es senti·e particulièrement séduisant·e.",
+            "Décris un geste romantique que tu aimerais recevoir.",
+            "Fais un toast à la personne qui t'a le plus fait sourire ce soir."
+          ]
+        }
+      };
+      const identityPrefix = "entre-nous.player.";
+      const $net = selector => document.querySelector(selector);
+      const roomForm = $net("#roomForm");
+      const roomCodeInput = $net("#roomCode");
+      const roomNotice = $net("#roomNotice");
+      const onlineView = $net("#onlineView");
+      let socket = null;
+      let room = null;
+      let playerId = null;
+      let debugVisible = false;
+      let lastQuestionKey = "";
+      let copyFeedbackTimer = 0;
+
+      function readIdentity(code) {
+        try {
+          return sessionStorage.getItem(identityPrefix + code) || "";
+        } catch (error) {
+          return "";
+        }
+      }
+
+      function saveIdentity(code, id) {
+        try {
+          sessionStorage.setItem(identityPrefix + code, id);
+        } catch (error) {
+          return;
+        }
+      }
+
+      function clearIdentity(code) {
+        try {
+          sessionStorage.removeItem(identityPrefix + code);
+        } catch (error) {
+          return;
+        }
+      }
+
+      function send(type, payload = {}) {
+        if (!socket || socket.readyState !== WebSocket.OPEN) {
+          $net("#onlineNotice").textContent = "La connexion au serveur est interrompue.";
+          return;
+        }
+        socket.send(JSON.stringify({ type, ...payload }));
+      }
+
+      function connect(code) {
+        debugVisible = false;
+        lastQuestionKey = "";
+        setHidden("#onlineDebug", true);
+        $net("#onlineDebug").classList.remove("visible");
+        if (!["http:", "https:"].includes(location.protocol)) {
+          roomNotice.textContent = "Pour le réseau, lancez le serveur et ouvrez http://localhost:3000 (pas le fichier directement).";
+          return;
+        }
+        roomNotice.textContent = "Connexion au serveur…";
+        socket = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`);
+        socket.addEventListener("open", () => {
+          if (code) {
+            send("join", { code, playerId: readIdentity(code) });
+          } else {
+            send("create");
+          }
+        });
+        socket.addEventListener("message", event => {
+          let message;
+          try {
+            message = JSON.parse(event.data);
+          } catch {
+            $net("#onlineNotice").textContent = "Réponse serveur illisible.";
+            return;
+          }
+          if (message.type === "error") {
+            roomNotice.textContent = message.message;
+            $net("#onlineNotice").textContent = message.message;
+            const nameInput = $net("#onlineName");
+            const myPlayer = room && room.players.find(player => player.id === playerId);
+            if (myPlayer && document.activeElement === nameInput) nameInput.value = myPlayer.name;
+            return;
+          }
+          if (message.type === "room") {
+            room = message.room;
+            playerId = message.playerId;
+            saveIdentity(room.code, playerId);
+            roomNotice.textContent = "";
+            renderRoom();
+          }
+        });
+        socket.addEventListener("close", () => {
+          $net("#onlineConnection").textContent = "Déconnecté du serveur";
+        });
+        socket.addEventListener("error", () => {
+          roomNotice.textContent = "Impossible de joindre le serveur. Vérifiez qu'il est démarré.";
+        });
+      }
+
+      function setOnlineView() {
+        document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view === onlineView));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function setHidden(selector, hidden) {
+        const element = $net(selector);
+        element.hidden = hidden;
+        element.style.display = hidden ? "none" : "";
+      }
+
+      function renderRoom() {
+        setOnlineView();
+        const myPlayer = room.players.find(player => player.id === playerId);
+        const isHost = Boolean(myPlayer && myPlayer.host);
+        $net("#onlineRoomTitle").textContent = `Salle · ${room.code}`;
+        $net("#onlineRoomCodeLabel").textContent = isHost ? "Votre code de salle à partager" : "Code de la salle";
+        const roomCodeElement = $net("#onlineRoomCode");
+        if (roomCodeElement.textContent !== room.code) {
+          roomCodeElement.textContent = room.code;
+          $net("#onlineCopyCode").textContent = "Copier le code";
+        }
+        const nameInput = $net("#onlineName");
+        if (myPlayer && document.activeElement !== nameInput) nameInput.value = myPlayer.name;
+        $net("#onlineNameForm").querySelector("button").disabled = !myPlayer;
+        $net("#onlineConnection").textContent = "Connecté · le serveur synchronise la partie";
+        $net("#onlinePlayerCount").textContent = `${room.players.length} / 12`;
+        $net("#onlinePlayers").replaceChildren();
+        room.players.forEach((player, index) => {
+          const item = document.createElement("li");
+          item.className = "player-row";
+          const label = document.createElement("span");
+          const active = room.game.started && index === room.game.activeIndex;
+          label.textContent = `${player.name}${player.host ? " · hôte" : ""}${active ? " · joue" : ""}${player.online ? "" : " · absent"}`;
+          item.append(label);
+          $net("#onlinePlayers").append(item);
+        });
+        setHidden("#onlineLobby", room.game.started && !room.game.ended);
+        setHidden("#onlineGame", !room.game.started);
+        setHidden("#onlineStart", !isHost);
+        $net("#onlineStart").disabled = room.players.length < 2;
+        $net("#onlineStart").textContent = room.game.ended ? "Rejouer" : "Lancer la partie";
+        setHidden("#onlineEnd", !isHost || !room.game.started || room.game.ended);
+        $net("#onlineNotice").textContent = "";
+        const game = room.game;
+        const activePlayer = room.players[game.activeIndex];
+        $net("#onlineActiveName").textContent = game.started && activePlayer ? activePlayer.name : "";
+        $net("#onlineTurnHint").textContent = game.started
+          ? `Tour ${String(game.turn).padStart(2, "0")} · ${game.questionsAsked} question(s) · ${game.answersGiven} réponse(s)`
+          : "En attente du lancement par l'hôte.";
+        setHidden("#onlineAdultTools", !(game.adultUnlocked && game.started && !game.ended));
+        $net("#onlineAdultTools").classList.toggle("visible", game.adultUnlocked && game.started && !game.ended);
+        $net("#onlineCustomCount").textContent = `${room.customQuestions.length} question(s) personnalisée(s) enregistrée(s) dans cette salle.`;
+        setHidden("#onlineDebug", !debugVisible);
+        $net("#onlineDebug").classList.toggle("visible", debugVisible);
+
+        if (game.ended) {
+          renderFinished();
+          return;
+        }
+        if (!game.started) {
+          $net("#onlineCard").replaceChildren();
+          return;
+        }
+        const questionKey = game.question ? `${game.turn}:${game.questionsAsked}:${game.question.mode}:${game.question.text}` : "";
+        if (questionKey !== lastQuestionKey) {
+          lastQuestionKey = questionKey;
+          renderOnlineQuestion();
+        } else if (game.question) {
+          renderOnlineVotes();
+        } else {
+          $net("#onlineCard").replaceChildren();
+          setHidden("#onlineModes", false);
+        }
+      }
+
+      function card(label, text) {
+        const article = document.createElement("article");
+        article.className = "question-card visible";
+        const content = document.createElement("div");
+        content.className = "card-content";
+        const tag = document.createElement("p");
+        tag.className = "card-label";
+        tag.textContent = label;
+        const question = document.createElement("p");
+        question.className = "question-text";
+        question.textContent = text;
+        content.append(tag, question);
+        article.append(content);
+        return article;
+      }
+
+      function renderOnlineQuestion() {
+        const game = room.game;
+        const stage = $net("#onlineCard");
+        stage.replaceChildren();
+        if (!game.question) {
+          setHidden("#onlineModes", false);
+          return;
+        }
+        setHidden("#onlineModes", true);
+        const question = game.question;
+        stage.append(card(question.mode === "adult" ? "Mode 18+" : question.mode === "wouldYouRather" ? "Tu préfères" : question.mode === "guessWho" ? "Devine qui" : question.mode === "qcm" ? "Question au groupe" : question.mode, question.text));
+        if (question.mode === "guessWho") {
+          if (room.myGuessTarget) {
+            const privateHint = document.createElement("p");
+            privateHint.className = "picker-note";
+            privateHint.textContent = `À décrire sans la nommer : ${room.myGuessTarget}`;
+            stage.append(privateHint);
+            if (game.question.text === "Décris cette personne sans la nommer. Les autres joueurs peuvent deviner.") {
+              const descriptionForm = document.createElement("form");
+              descriptionForm.className = "response-box";
+              const description = document.createElement("textarea");
+              description.maxLength = 300;
+              description.placeholder = "Écris un indice que les autres joueurs verront…";
+              description.setAttribute("aria-label", "Description à partager avec les autres joueurs");
+              const share = document.createElement("button");
+              share.type = "submit";
+              share.className = "gold-button";
+              share.textContent = "Partager l'indice";
+              descriptionForm.append(description, share);
+              descriptionForm.addEventListener("submit", event => {
+                event.preventDefault();
+                send("describe", { text: description.value });
+              });
+              stage.append(descriptionForm);
+            }
+          } else if (!game.guessRevealed && playerId !== room.players[game.activeIndex]?.id) {
+            const form = document.createElement("form");
+            form.className = "response-box";
+            const input = document.createElement("input");
+            input.maxLength = 100;
+            input.placeholder = "Qui est décrit·e ?";
+            input.setAttribute("aria-label", "Votre proposition");
+            const submit = document.createElement("button");
+            submit.type = "submit";
+            submit.className = "gold-button";
+            submit.textContent = "Envoyer ma proposition";
+            form.append(input, submit);
+            form.addEventListener("submit", event => {
+              event.preventDefault();
+              send("guess", { text: input.value });
+            });
+            stage.append(form);
+          }
+          if (game.guesses.length) {
+            const guesses = document.createElement("p");
+            guesses.className = "picker-note";
+            guesses.textContent = game.guessRevealed
+              ? `La personne à deviner était ${game.guessTarget}. Propositions : ${game.guesses.map(item => `${item.name} : ${item.text}`).join(" · ")}`
+              : `${game.guesses.length} proposition(s) reçue(s).`;
+            stage.append(guesses);
+          }
+          if (!game.guessRevealed) stage.append(makeOnlineButton("Révéler la réponse", "rose-button", () => send("reveal")));
+          stage.append(makeOnlineButton("Passer au tour suivant", "gold-button", () => send("next")));
+          return;
+        }
+        if (question.options.length) {
+          const answers = document.createElement("div");
+          answers.className = "answers";
+          const voteCounts = question.options.map((_, index) => game.votes.filter(vote => vote.optionIndex === index).length);
+          const myVote = game.votes.find(vote => vote.playerId === playerId);
+          question.options.forEach((option, index) => {
+            const button = makeOnlineButton("", "answer-button", () => send("vote", { optionIndex: index }));
+            button.classList.toggle("selected", myVote?.optionIndex === index);
+            const text = document.createElement("span");
+            text.textContent = option;
+            const count = document.createElement("span");
+            count.className = "vote-count";
+            count.textContent = `${voteCounts[index]} vote${voteCounts[index] === 1 ? "" : "s"}`;
+            button.append(text, count);
+            answers.append(button);
+          });
+          stage.append(answers);
+          if (game.revealed) {
+            const result = document.createElement("p");
+            result.className = "result-banner visible";
+            const max = Math.max(...voteCounts);
+            const winners = question.options.filter((_, index) => voteCounts[index] === max);
+            result.textContent = max === 0 ? "Pas encore de vote." : winners.length > 1 ? `Égalité : ${winners.join(" et ")}.` : `Le choix du groupe : ${winners[0]} (${max} vote${max === 1 ? "" : "s"}).`;
+            stage.append(result);
+          }
+          if (!game.revealed) stage.append(makeOnlineButton("Révéler les votes", "rose-button", () => send("reveal")));
+        }
+        stage.append(makeOnlineButton("Terminer mon tour →", "gold-button", () => send("next")));
+        stage.append(makeOnlineButton("Passer cette question", "subtle-button", () => send("next")));
+      }
+
+      function renderOnlineVotes() {
+        if (room.game.question?.options.length) renderOnlineQuestion();
+      }
+
+      function renderFinished() {
+        setHidden("#onlineModes", true);
+        $net("#onlineCard").replaceChildren();
+        const game = room.game;
+        const recap = card("La soirée", `${game.turn - 1} tour(s) · ${game.questionsAsked} question(s) · ${game.answersGiven} réponse(s). Merci pour la confiance et les fous rires.`);
+        $net("#onlineCard").append(recap);
+        game.history.slice(-8).reverse().forEach(item => {
+          const line = document.createElement("p");
+          line.className = "picker-note";
+          line.textContent = `${item.player} · ${item.mode} : ${item.text}`;
+          $net("#onlineCard").append(line);
+        });
+      }
+
+      function makeOnlineButton(label, className, callback) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = className;
+        button.textContent = label;
+        button.addEventListener("click", callback);
+        return button;
+      }
+
+      function askPrompt(mode) {
+        if (room.game.question) {
+          $net("#onlineNotice").textContent = "Terminez le tour actuel avant de choisir une autre question.";
+          return;
+        }
+        if (mode === "adult" && !room.game.adultUnlocked) {
+          const code = window.prompt("Code d'accès au mode 18+");
+          if (code === null) return;
+          if (code !== "6969") {
+            $net("#onlineNotice").textContent = "Code d'accès incorrect.";
+            return;
+          }
+          send("adultUnlock", { code });
+          return;
+        }
+        let text;
+        let options = [];
+        if (mode === "wouldYouRather") {
+          options = wouldYouRather[Math.floor(Math.random() * wouldYouRather.length)];
+          text = "Que préfères-tu ?";
+        } else if (mode === "qcm") {
+          const entry = onlinePrompts.qcm[Math.floor(Math.random() * onlinePrompts.qcm.length)];
+          text = entry.question;
+          options = entry.options;
+        } else if (mode === "guessWho") {
+          text = "Décris cette personne sans la nommer.";
+        } else if (mode === "adult") {
+          const category = $net("#onlineCustomCategory").value;
+          const pool = room.customQuestions.filter(item => item.category === category);
+          text = pool.length
+            ? pool[Math.floor(Math.random() * pool.length)].text
+            : onlinePrompts.adult[category][Math.floor(Math.random() * onlinePrompts.adult[category].length)];
+        } else {
+          const pool = onlinePrompts[mode];
+          text = pool[Math.floor(Math.random() * pool.length)];
+        }
+        send("prompt", { mode, text, options });
+      }
+
+      roomForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const code = roomCodeInput.value.trim();
+        roomNotice.textContent = "";
+        if (code && !/^\d{6}$/.test(code)) {
+          roomNotice.textContent = "Le code doit contenir 6 chiffres.";
+          roomCodeInput.focus();
+          return;
+        }
+        if (socket && socket.readyState !== WebSocket.CLOSED) socket.close();
+        connect(code);
+      });
+      $net("#onlineNameForm").addEventListener("submit", event => {
+        event.preventDefault();
+        if (!room) return;
+        const input = $net("#onlineName");
+        const name = input.value.trim().replace(/\s+/g, " ").slice(0, 24);
+        $net("#onlineNotice").textContent = "";
+        if (!name) {
+          $net("#onlineNotice").textContent = "Choisissez un nom avant de valider.";
+          input.focus();
+          return;
+        }
+        input.value = name;
+        if (room.players.some(player => player.id === playerId && player.name === name)) {
+          input.blur();
+          return;
+        }
+        send("rename", { name });
+      });
+      $net("#onlineStart").addEventListener("click", () => send("start"));
+      function fallbackCopyText(text) {
+        const helper = document.createElement("textarea");
+        helper.value = text;
+        helper.setAttribute("readonly", "");
+        helper.style.position = "fixed";
+        helper.style.top = "-1000px";
+        helper.style.opacity = "0";
+        document.body.append(helper);
+        helper.select();
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } catch (error) {
+          copied = false;
+        }
+        helper.remove();
+        return copied;
+      }
+      async function copyRoomCode() {
+        if (!room) return;
+        const code = room.code;
+        const button = $net("#onlineCopyCode");
+        let copied = false;
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(code);
+            copied = true;
+          }
+        } catch (error) {
+          copied = false;
+        }
+        if (!copied) copied = fallbackCopyText(code);
+        window.clearTimeout(copyFeedbackTimer);
+        button.textContent = copied ? "Code copié ✓" : "Copie impossible";
+        copyFeedbackTimer = window.setTimeout(() => {
+          if (room && room.code === code) button.textContent = "Copier le code";
+        }, 2000);
+      }
+      $net("#onlineCopyCode").addEventListener("click", copyRoomCode);
+      $net("#onlineEnd").addEventListener("click", () => send("finish"));
+      $net("#onlineLeave").addEventListener("click", () => {
+        const leftCode = room ? room.code : "";
+        if (socket) socket.close(1000, "Joueur parti");
+        socket = null;
+        room = null;
+        playerId = null;
+        debugVisible = false;
+        lastQuestionKey = "";
+        window.clearTimeout(copyFeedbackTimer);
+        if (leftCode) clearIdentity(leftCode);
+        $net("#onlineCopyCode").textContent = "Copier le code";
+        $net("#onlineName").value = "";
+        setHidden("#onlineDebug", true);
+        $net("#onlineDebug").classList.remove("visible");
+        $net("#onlineNotice").textContent = "";
+        document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.id === "setupView"));
+      });
+      $net("#onlineModes").addEventListener("click", event => {
+        const button = event.target.closest("[data-online-mode]");
+        if (button) askPrompt(button.dataset.onlineMode);
+      });
+      $net("#onlineCustomQuestionForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const input = $net("#onlineCustomQuestion");
+        send("customQuestion", { text: input.value, category: $net("#onlineCustomCategory").value });
+        input.value = "";
+      });
+      $net("#debugNext").addEventListener("click", () => send("next"));
+      $net("#debugAdult").addEventListener("click", () => send("adultUnlock", { code: "6969" }));
+      $net("#debugHistory").addEventListener("click", () => send("clearHistory"));
+      $net("#debugPlayer").addEventListener("click", () => {
+        if (room) send("setPlayer", { index: (room.game.activeIndex + 1) % room.players.length });
+      });
+      document.addEventListener("keydown", event => {
+        if (event.ctrlKey && event.shiftKey && event.key.toLowerCase() === "d" && room) {
+          debugVisible = !debugVisible;
+          setHidden("#onlineDebug", !debugVisible);
+          $net("#onlineDebug").classList.toggle("visible", debugVisible);
+        }
+      }, true);
+    })();
+  </script>
+</body>
+</html>
+
