@@ -13,6 +13,7 @@ const MAX_PLAYERS = 12;
 const MAX_MESSAGE_BYTES = 16 * 1024;
 const rooms = new Map();
 const clients = new Map();
+const handoverTimers = new Map();
 
 function loadRooms() {
   if (!fs.existsSync(DATA_FILE)) return;
@@ -23,8 +24,9 @@ function loadRooms() {
     room.players = room.players.map(player => ({ ...player, online: false }));
     room.connections = new Map();
     room.customQuestions = Array.isArray(room.customQuestions) ? room.customQuestions : [];
-    room.game.votes = Array.isArray(room.game.votes) ? room.game.votes : [];
+    room.game.votes = [];
     room.game.history = Array.isArray(room.game.history) ? room.game.history : [];
+    room.game.question = room.game.question && room.game.question.targetId ? room.game.question : null;
     rooms.set(room.code, room);
   }
 }
@@ -70,7 +72,7 @@ function nextGuestName(room) {
 function roomSnapshot(room, playerId) {
   const game = { ...room.game };
   delete game.guessTarget;
-  if (room.game.guessTarget && room.game.guessRevealed) game.guessTarget = room.game.guessTarget;
+  delete game.guesses;
   return {
     type: "room",
     room: {
@@ -78,10 +80,7 @@ function roomSnapshot(room, playerId) {
       hostId: room.hostId,
       players: room.players.map(({ id, name, online }) => ({ id, name, online, host: id === room.hostId })),
       customQuestions: room.customQuestions,
-      game,
-      myGuessTarget: room.game.guessTarget && room.game.activePlayerId === playerId && !room.game.guessRevealed
-        ? room.game.guessTarget
-        : null
+      game
     },
     playerId
   };
@@ -159,14 +158,46 @@ function joinRoom(code, name, reconnectId, socket) {
     room.players.push(player);
   }
   player.online = true;
+  cancelHandover(player.id);
   room.connections.set(player.id, socket);
   clients.set(socket, { room, playerId: player.id });
   persistAndBroadcast(room);
 }
 
+function cancelHandover(playerId) {
+  const timer = handoverTimers.get(playerId);
+  if (timer) {
+    clearTimeout(timer);
+    handoverTimers.delete(playerId);
+  }
+}
+
+function scheduleHandover(room, playerId) {
+  cancelHandover(playerId);
+  handoverTimers.set(playerId, setTimeout(() => {
+    handoverTimers.delete(playerId);
+    if (!room.connections.has(playerId) && room.game.started && !room.game.ended) {
+      const activePlayer = room.players[room.game.activeIndex];
+      if (activePlayer && activePlayer.id === playerId) {
+        changeTurn(room, room.game.activeIndex + 1);
+        persistAndBroadcast(room);
+      }
+    }
+  }, 15000));
+}
+
 function changeTurn(room, index) {
   const game = room.game;
-  game.activeIndex = (index + room.players.length) % room.players.length;
+  const total = room.players.length;
+  let nextIndex = ((index % total) + total) % total;
+  // La main passe au prochain joueur encore connecté.
+  for (let step = 0; step < total; step += 1) {
+    const candidate = room.players[(nextIndex + step) % total];
+    if (room.connections.has(candidate.id)) {
+      game.activeIndex = (nextIndex + step) % total;
+      break;
+    }
+  }
   game.turn += 1;
   game.question = null;
   game.votes = [];
@@ -214,14 +245,14 @@ function handleMessage(socket, data) {
       if (nameTaken(room, name, playerId)) return sendError(socket, "Ce nom est déjà utilisé dans cette salle.");
       const player = playerFor(room, playerId);
       if (!player) return sendError(socket, "Joueur introuvable.");
-      const previousName = player.name;
       player.name = name;
-      if (game.guessTarget === previousName) game.guessTarget = name;
+      if (game.question) {
+        if (game.question.askerId === playerId) game.question.askerName = name;
+        if (game.question.targetId === playerId) game.question.targetName = name;
+      }
       game.history.forEach(entry => {
-        if (entry.player === previousName) entry.player = name;
-      });
-      game.guesses.forEach(guess => {
-        if (guess.playerId === playerId) guess.name = name;
+        if (entry.askerId === playerId) entry.asker = name;
+        if (entry.targetId === playerId) entry.target = name;
       });
       persistAndBroadcast(room);
       break;
@@ -232,7 +263,8 @@ function handleMessage(socket, data) {
       if (game.started && !game.ended) return sendError(socket, "La partie est déjà en cours.");
       game.started = true;
       game.ended = false;
-      game.activeIndex = 0;
+      const firstOnline = room.players.findIndex(player => room.connections.has(player.id));
+      game.activeIndex = firstOnline >= 0 ? firstOnline : 0;
       game.turn = 1;
       game.questionsAsked = 0;
       game.answersGiven = 0;
@@ -247,85 +279,92 @@ function handleMessage(socket, data) {
       break;
     case "prompt": {
       if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
-      if (!isHost && !isActivePlayer) return sendError(socket, "Seul l'hôte ou le joueur actif peut poser une question.");
-      if (game.question) return sendError(socket, "Terminez le tour actuel avant de poser une autre question.");
-      const mode = typeof message.mode === "string" ? message.mode : "";
-      const allowedModes = ["truth", "action", "wouldYouRather", "qcm", "guessWho", "adult"];
-      if (!allowedModes.includes(mode)) return sendError(socket, "Mode de jeu inconnu.");
+      if (!isActivePlayer) return sendError(socket, "C'est au tour d'un autre joueur de poser les questions.");
+      if (game.question) return sendError(socket, "Une question est déjà en cours.");
+      const target = playerFor(room, typeof message.targetId === "string" ? message.targetId : "");
+      if (!target) return sendError(socket, "Choisissez la personne à qui poser la question.");
+      if (target.id === playerId) return sendError(socket, "Vous ne pouvez pas vous interroger vous-même.");
+      const mode = typeof message.mode === "string" ? message.mode : "custom";
+      const allowedModes = ["truth", "action", "wouldYouRather", "qcm", "adult", "custom"];
+      if (!allowedModes.includes(mode)) return sendError(socket, "Type de question inconnu.");
       if (mode === "adult" && !game.adultUnlocked) return sendError(socket, "Le mode 18+ n'est pas déverrouillé.");
       const text = typeof message.text === "string" ? message.text.trim().slice(0, 500) : "";
       const options = Array.isArray(message.options)
         ? message.options.filter(option => typeof option === "string").slice(0, 4).map(option => option.slice(0, 180))
         : [];
       if (!text) return sendError(socket, "La question ne peut pas être vide.");
-      if ((mode === "qcm" || mode === "wouldYouRather") && options.length !== 2 && (mode === "wouldYouRather" || options.length < 2)) {
-        return sendError(socket, "Cette question doit proposer des choix valides.");
-      }
       if (mode === "wouldYouRather" && options.length !== 2) return sendError(socket, "Il faut exactement deux choix.");
-      game.question = { mode, text, options };
+      if (mode === "qcm" && options.length < 2) return sendError(socket, "Cette question doit proposer des choix.");
+      const asker = playerFor(room, playerId);
+      const historyEntry = {
+        id: randomUUID(),
+        askerId: playerId,
+        asker: asker.name,
+        targetId: target.id,
+        target: target.name,
+        mode,
+        text,
+        answer: ""
+      };
+      game.history.push(historyEntry);
+      if (game.history.length > 50) game.history.shift();
+      game.question = {
+        mode,
+        text,
+        options,
+        askerId: playerId,
+        askerName: asker.name,
+        targetId: target.id,
+        targetName: target.name,
+        answer: "",
+        answerIndex: null,
+        answered: false,
+        historyId: historyEntry.id
+      };
       game.votes = [];
       game.revealed = false;
       game.questionsAsked += 1;
       game.guessTarget = null;
       game.guessRevealed = false;
       game.guesses = [];
-      if (game.history.length >= 24) game.history.shift();
-      game.history.push({ player: room.players[game.activeIndex].name, text, mode });
-      if (mode === "guessWho") {
-        const candidates = room.players.filter(player => player.id !== room.players[game.activeIndex].id);
-        game.guessTarget = candidates[randomInt(candidates.length)].name;
-        game.question.text = "Décris cette personne sans la nommer. Les autres joueurs peuvent deviner.";
-        game.activePlayerId = room.players[game.activeIndex].id;
+      persistAndBroadcast(room);
+      break;
+    }
+    case "answer": {
+      if (!game.started || game.ended || !game.question) return sendError(socket, "Aucune question n'est en cours.");
+      if (game.question.answered) return sendError(socket, "Cette question a déjà reçu une réponse.");
+      if (game.question.targetId !== playerId) return sendError(socket, "Seule la personne interrogée peut répondre.");
+      let answer;
+      let answerIndex = null;
+      if (game.question.options.length) {
+        const optionIndex = Number(message.optionIndex);
+        if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= game.question.options.length) {
+          return sendError(socket, "Choisissez une réponse dans la liste.");
+        }
+        answerIndex = optionIndex;
+        answer = game.question.options[optionIndex];
+      } else {
+        answer = typeof message.text === "string" ? message.text.trim().slice(0, 500) : "";
+        if (!answer) return sendError(socket, "Écrivez votre réponse.");
       }
-      persistAndBroadcast(room);
-      break;
-    }
-    case "vote": {
-      if (!game.started || game.ended || game.revealed) return sendError(socket, "Le vote n'est pas ouvert.");
-      if (!game.question || !game.question.options.length) return sendError(socket, "Aucun vote n'est ouvert.");
-      const optionIndex = Number(message.optionIndex);
-      if (!Number.isInteger(optionIndex) || optionIndex < 0 || optionIndex >= game.question.options.length) {
-        return sendError(socket, "Choix de vote invalide.");
-      }
-      game.votes = game.votes.filter(vote => vote.playerId !== playerId);
-      game.votes.push({ playerId, optionIndex });
-      persistAndBroadcast(room);
-      break;
-    }
-    case "reveal":
-      if (!game.started || game.ended || !game.question) return sendError(socket, "Aucune question à révéler.");
-      if (!isHost && !isActivePlayer) return sendError(socket, "Seul l'hôte ou le joueur actif peut révéler.");
-      if (game.question?.mode === "guessWho") game.guessRevealed = true;
-      game.revealed = true;
-      persistAndBroadcast(room);
-      break;
-    case "guess": {
-      if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
-      if (game.question?.mode !== "guessWho" || game.guessRevealed) return sendError(socket, "Aucune devinette n'est ouverte.");
-      if (isActivePlayer) return sendError(socket, "Le joueur qui décrit ne peut pas deviner.");
-      const guess = typeof message.text === "string" ? message.text.trim().slice(0, 100) : "";
-      if (!guess) return sendError(socket, "Écrivez votre proposition.");
-      game.guesses = game.guesses.filter(item => item.playerId !== playerId);
-      game.guesses.push({ playerId, name: playerFor(room, playerId).name, text: guess });
-      persistAndBroadcast(room);
-      break;
-    }
-    case "describe": {
-      if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
-      if (game.question?.mode !== "guessWho" || game.question.text !== "Décris cette personne sans la nommer. Les autres joueurs peuvent deviner.") {
-        return sendError(socket, "Aucune description n'est attendue.");
-      }
-      if (!isActivePlayer) return sendError(socket, "Seul le joueur actif peut décrire.");
-      const description = typeof message.text === "string" ? message.text.trim().slice(0, 300) : "";
-      if (description.length < 3) return sendError(socket, "Écrivez une description un peu plus complète.");
-      game.question.text = description;
-      persistAndBroadcast(room);
-      break;
-    }
-    case "next":
-      if (!isHost && !isActivePlayer) return sendError(socket, "Seul l'hôte ou le joueur actif peut passer au tour suivant.");
-      if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
+      game.question.answer = answer;
+      game.question.answerIndex = answerIndex;
+      game.question.answered = true;
       game.answersGiven += 1;
+      const entry = game.history.find(item => item.id === game.question.historyId);
+      if (entry) entry.answer = answer;
+      persistAndBroadcast(room);
+      break;
+    }
+    case "clearQuestion":
+      if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
+      if (!isActivePlayer) return sendError(socket, "Seul le joueur qui pose les questions peut changer de question.");
+      game.question = null;
+      persistAndBroadcast(room);
+      break;
+    case "next":
+      if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
+      if (!isActivePlayer) return sendError(socket, "Seul le joueur qui pose les questions peut passer la main.");
       changeTurn(room, game.activeIndex + 1);
       persistAndBroadcast(room);
       break;
@@ -359,12 +398,6 @@ function handleMessage(socket, data) {
     case "clearHistory":
       if (!isHost) return sendError(socket, "Seul l'hôte peut vider l'historique.");
       game.history = [];
-      persistAndBroadcast(room);
-      break;
-    case "finish":
-      if (!isHost) return sendError(socket, "Seul l'hôte peut terminer la soirée.");
-      if (!game.started || game.ended) return sendError(socket, "La partie n'est pas en cours.");
-      game.ended = true;
       persistAndBroadcast(room);
       break;
     case "leave":
@@ -427,6 +460,7 @@ webSocketServer.on("connection", socket => {
       const nextHost = room.players.find(item => room.connections.has(item.id));
       if (nextHost) room.hostId = nextHost.id;
     }
+    scheduleHandover(room, playerId);
     persistAndBroadcast(room);
   });
 });

@@ -261,8 +261,14 @@
     .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px; }
     .card-actions.single { grid-template-columns: 1fr; }
     .response-box { display: grid; gap: 8px; margin-top: 14px; }
-    .response-box label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+    .response-box label, .ask-target label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
     .response-box textarea { min-height: 74px; }
+    .ask-target { margin-bottom: 16px; }
+    .ask-target label { display: block; margin-bottom: 8px; }
+    .ask-or { margin: 20px 0 10px; text-align: center; }
+    .question-meta { margin: 13px 0 0; color: var(--rose); font-size: 10px; letter-spacing: .13em; line-height: 1.7; text-align: center; text-transform: uppercase; }
+    .answer-banner { margin: 16px 0 0; padding: 13px; border: 1px solid rgba(232,160,160,.35); background: rgba(232,160,160,.06); color: var(--text); font-size: 12px; line-height: 1.75; text-align: left; }
+    .answer-banner strong { color: var(--rose); font-weight: 400; }
     .response-note { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
     .answers { display: grid; gap: 8px; margin-top: 20px; }
     .answer-button { min-height: 47px; justify-content: space-between; padding: 8px 12px; text-align: left; line-height: 1.45; letter-spacing: .035em; }
@@ -445,14 +451,31 @@
             <button class="gold-button wide" id="onlineStart" type="button" hidden>Lancer la partie</button>
           </div>
           <div id="onlineGame" hidden>
-            <div class="mode-grid" id="onlineModes">
-              <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité</span></button>
-              <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action</span></button>
-              <button class="mode-button" data-online-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Vote QCM</span></button>
-              <button class="mode-button" data-online-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
-              <button class="mode-button" data-online-mode="guessWho" type="button"><span class="mode-icon">?</span><span class="mode-name">Devine qui</span></button>
-              <button class="mode-button" data-online-mode="adult" type="button"><span class="mode-icon">18+</span><span class="mode-name">Mode 18+</span></button>
+            <div id="onlineAskPanel" hidden>
+              <div class="ask-target">
+                <label for="onlineTarget">À qui posez-vous la question ?</label>
+                <select id="onlineTarget" aria-label="Personne à interroger"></select>
+              </div>
+              <form class="response-box" id="onlineQuestionForm">
+                <label for="onlineQuestionText">Votre question</label>
+                <textarea id="onlineQuestionText" maxlength="500" placeholder="Écrivez la question que vous voulez poser…"></textarea>
+                <select id="onlineQuestionMode" aria-label="Type de question personnalisée">
+                  <option value="truth">Vérité</option>
+                  <option value="action">Action</option>
+                  <option value="adult" hidden>18+</option>
+                </select>
+                <button class="gold-button" type="submit">Poser ma question</button>
+              </form>
+              <p class="picker-note ask-or">…ou laissez le jeu choisir une question :</p>
+              <div class="mode-grid" id="onlineModes">
+                <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité</span></button>
+                <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action</span></button>
+                <button class="mode-button" data-online-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Choix multiple</span></button>
+                <button class="mode-button" data-online-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
+                <button class="mode-button" data-online-mode="adult" type="button"><span class="mode-icon">18+</span><span class="mode-name">Mode 18+</span></button>
+              </div>
             </div>
+            <p class="picker-note" id="onlineWaiting" hidden></p>
             <div class="card-stage" id="onlineCard"></div>
             <div class="adult-tools" id="onlineAdultTools" hidden>
               <form id="onlineCustomQuestionForm">
@@ -479,8 +502,7 @@
           </div>
           <p class="notice" id="onlineNotice" role="status"></p>
           <div class="turn-footer">
-            <button class="subtle-button" id="onlineLeave" type="button">Quitter la salle</button>
-            <button class="subtle-button" id="onlineEnd" type="button" hidden>Terminer la soirée</button>
+            <button class="subtle-button" id="onlineLeave" type="button">Retour à l'accueil</button>
           </div>
         </div>
       </section>
@@ -1539,6 +1561,7 @@
       let debugVisible = false;
       let lastQuestionKey = "";
       let copyFeedbackTimer = 0;
+      let selectedTargetId = "";
 
       function readIdentity(code) {
         try {
@@ -1575,6 +1598,7 @@
       function connect(code) {
         debugVisible = false;
         lastQuestionKey = "";
+        selectedTargetId = "";
         setHidden("#onlineDebug", true);
         $net("#onlineDebug").classList.remove("visible");
         if (!["http:", "https:"].includes(location.protocol)) {
@@ -1637,6 +1661,9 @@
         setOnlineView();
         const myPlayer = room.players.find(player => player.id === playerId);
         const isHost = Boolean(myPlayer && myPlayer.host);
+        const game = room.game;
+        const activePlayer = room.players[game.activeIndex];
+        const myTurn = Boolean(game.started && activePlayer && activePlayer.id === playerId);
         $net("#onlineRoomTitle").textContent = `Salle · ${room.code}`;
         $net("#onlineRoomCodeLabel").textContent = isHost ? "Votre code de salle à partager" : "Code de la salle";
         const roomCodeElement = $net("#onlineRoomCode");
@@ -1654,48 +1681,92 @@
           const item = document.createElement("li");
           item.className = "player-row";
           const label = document.createElement("span");
-          const active = room.game.started && index === room.game.activeIndex;
-          label.textContent = `${player.name}${player.host ? " · hôte" : ""}${active ? " · joue" : ""}${player.online ? "" : " · absent"}`;
+          const badges = [];
+          if (player.host) badges.push("hôte");
+          if (game.started && index === game.activeIndex) badges.push("pose les questions");
+          if (game.started && game.question && game.question.targetId === player.id) badges.push("répond");
+          if (player.id === playerId) badges.push("vous");
+          if (!player.online) badges.push("absent");
+          label.textContent = badges.length ? `${player.name} · ${badges.join(" · ")}` : player.name;
           item.append(label);
           $net("#onlinePlayers").append(item);
         });
-        setHidden("#onlineLobby", room.game.started && !room.game.ended);
-        setHidden("#onlineGame", !room.game.started);
+        setHidden("#onlineLobby", game.started && !game.ended);
+        setHidden("#onlineGame", !game.started);
         setHidden("#onlineStart", !isHost);
         $net("#onlineStart").disabled = room.players.length < 2;
-        $net("#onlineStart").textContent = room.game.ended ? "Rejouer" : "Lancer la partie";
-        setHidden("#onlineEnd", !isHost || !room.game.started || room.game.ended);
+        $net("#onlineStart").textContent = game.ended ? "Rejouer" : "Lancer la partie";
         $net("#onlineNotice").textContent = "";
-        const game = room.game;
-        const activePlayer = room.players[game.activeIndex];
         $net("#onlineActiveName").textContent = game.started && activePlayer ? activePlayer.name : "";
         $net("#onlineTurnHint").textContent = game.started
-          ? `Tour ${String(game.turn).padStart(2, "0")} · ${game.questionsAsked} question(s) · ${game.answersGiven} réponse(s)`
+          ? myTurn
+            ? (game.question ? "Vous posez les questions. Une réponse est attendue." : "À vous de choisir qui interroger.")
+            : `C'est à ${activePlayer.name} de poser les questions.`
           : "En attente du lancement par l'hôte.";
         setHidden("#onlineAdultTools", !(game.adultUnlocked && game.started && !game.ended));
         $net("#onlineAdultTools").classList.toggle("visible", game.adultUnlocked && game.started && !game.ended);
         $net("#onlineCustomCount").textContent = `${room.customQuestions.length} question(s) personnalisée(s) enregistrée(s) dans cette salle.`;
         setHidden("#onlineDebug", !debugVisible);
         $net("#onlineDebug").classList.toggle("visible", debugVisible);
+        const adultChoice = $net("#onlineQuestionMode").querySelector('option[value="adult"]');
+        adultChoice.hidden = !game.adultUnlocked;
+        adultChoice.disabled = !game.adultUnlocked;
 
         if (game.ended) {
+          setHidden("#onlineAskPanel", true);
+          setHidden("#onlineWaiting", true);
           renderFinished();
           return;
         }
         if (!game.started) {
+          setHidden("#onlineAskPanel", true);
+          setHidden("#onlineWaiting", true);
           $net("#onlineCard").replaceChildren();
           return;
         }
-        const questionKey = game.question ? `${game.turn}:${game.questionsAsked}:${game.question.mode}:${game.question.text}` : "";
-        if (questionKey !== lastQuestionKey) {
-          lastQuestionKey = questionKey;
-          renderOnlineQuestion();
-        } else if (game.question) {
-          renderOnlineVotes();
-        } else {
-          $net("#onlineCard").replaceChildren();
-          setHidden("#onlineModes", false);
+
+        const asking = myTurn && !game.question;
+        setHidden("#onlineAskPanel", !asking);
+        $net("#onlineAskPanel").classList.toggle("visible", asking);
+        if (asking) renderTargetPicker();
+        setHidden("#onlineWaiting", myTurn || Boolean(game.question));
+        if (!myTurn && !game.question) {
+          $net("#onlineWaiting").textContent = `En attente de la question de ${activePlayer.name}…`;
         }
+        if (game.question) {
+          const questionKey = `${game.turn}:${game.questionsAsked}:${game.question.askerId}:${game.question.targetId}:${game.question.answered}:${game.question.answer}`;
+          if (questionKey !== lastQuestionKey) {
+            lastQuestionKey = questionKey;
+            renderOnlineQuestion();
+          }
+        } else {
+          lastQuestionKey = "";
+          $net("#onlineCard").replaceChildren();
+        }
+      }
+
+      function renderTargetPicker() {
+        const select = $net("#onlineTarget");
+        const candidates = room.players.filter(player => player.id !== playerId);
+        const available = candidates.map(player => player.id);
+        if (!available.includes(selectedTargetId)) selectedTargetId = available[0] || "";
+        select.replaceChildren();
+        if (!candidates.length) {
+          const option = document.createElement("option");
+          option.value = "";
+          option.textContent = "Aucun autre joueur";
+          select.append(option);
+          select.disabled = true;
+          return;
+        }
+        select.disabled = false;
+        candidates.forEach(player => {
+          const option = document.createElement("option");
+          option.value = player.id;
+          option.textContent = `${player.name}${player.online ? "" : " (absent)"}`;
+          select.append(option);
+        });
+        select.value = selectedTargetId;
       }
 
       function card(label, text) {
@@ -1714,116 +1785,114 @@
         return article;
       }
 
+      function modeLabel(mode) {
+        if (mode === "adult") return "Mode 18+";
+        if (mode === "wouldYouRather") return "Tu préfères";
+        if (mode === "qcm") return "Choix multiple";
+        if (mode === "action") return "Action";
+        if (mode === "truth") return "Vérité";
+        return "Question";
+      }
+
       function renderOnlineQuestion() {
         const game = room.game;
         const stage = $net("#onlineCard");
         stage.replaceChildren();
-        if (!game.question) {
-          setHidden("#onlineModes", false);
-          return;
-        }
-        setHidden("#onlineModes", true);
         const question = game.question;
-        stage.append(card(question.mode === "adult" ? "Mode 18+" : question.mode === "wouldYouRather" ? "Tu préfères" : question.mode === "guessWho" ? "Devine qui" : question.mode === "qcm" ? "Question au groupe" : question.mode, question.text));
-        if (question.mode === "guessWho") {
-          if (room.myGuessTarget) {
-            const privateHint = document.createElement("p");
-            privateHint.className = "picker-note";
-            privateHint.textContent = `À décrire sans la nommer : ${room.myGuessTarget}`;
-            stage.append(privateHint);
-            if (game.question.text === "Décris cette personne sans la nommer. Les autres joueurs peuvent deviner.") {
-              const descriptionForm = document.createElement("form");
-              descriptionForm.className = "response-box";
-              const description = document.createElement("textarea");
-              description.maxLength = 300;
-              description.placeholder = "Écris un indice que les autres joueurs verront…";
-              description.setAttribute("aria-label", "Description à partager avec les autres joueurs");
-              const share = document.createElement("button");
-              share.type = "submit";
-              share.className = "gold-button";
-              share.textContent = "Partager l'indice";
-              descriptionForm.append(description, share);
-              descriptionForm.addEventListener("submit", event => {
-                event.preventDefault();
-                send("describe", { text: description.value });
-              });
-              stage.append(descriptionForm);
-            }
-          } else if (!game.guessRevealed && playerId !== room.players[game.activeIndex]?.id) {
-            const form = document.createElement("form");
-            form.className = "response-box";
-            const input = document.createElement("input");
-            input.maxLength = 100;
-            input.placeholder = "Qui est décrit·e ?";
-            input.setAttribute("aria-label", "Votre proposition");
-            const submit = document.createElement("button");
-            submit.type = "submit";
-            submit.className = "gold-button";
-            submit.textContent = "Envoyer ma proposition";
-            form.append(input, submit);
-            form.addEventListener("submit", event => {
-              event.preventDefault();
-              send("guess", { text: input.value });
-            });
-            stage.append(form);
-          }
-          if (game.guesses.length) {
-            const guesses = document.createElement("p");
-            guesses.className = "picker-note";
-            guesses.textContent = game.guessRevealed
-              ? `La personne à deviner était ${game.guessTarget}. Propositions : ${game.guesses.map(item => `${item.name} : ${item.text}`).join(" · ")}`
-              : `${game.guesses.length} proposition(s) reçue(s).`;
-            stage.append(guesses);
-          }
-          if (!game.guessRevealed) stage.append(makeOnlineButton("Révéler la réponse", "rose-button", () => send("reveal")));
-          stage.append(makeOnlineButton("Passer au tour suivant", "gold-button", () => send("next")));
-          return;
-        }
+        if (!question) return;
+        stage.append(card(modeLabel(question.mode), question.text));
+        const meta = document.createElement("p");
+        meta.className = "question-meta";
+        meta.textContent = `${question.askerName} interroge ${question.targetName}`;
+        stage.append(meta);
+
+        const isAsker = question.askerId === playerId;
+        const isTarget = question.targetId === playerId;
+
         if (question.options.length) {
           const answers = document.createElement("div");
           answers.className = "answers";
-          const voteCounts = question.options.map((_, index) => game.votes.filter(vote => vote.optionIndex === index).length);
-          const myVote = game.votes.find(vote => vote.playerId === playerId);
           question.options.forEach((option, index) => {
-            const button = makeOnlineButton("", "answer-button", () => send("vote", { optionIndex: index }));
-            button.classList.toggle("selected", myVote?.optionIndex === index);
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "answer-button";
+            if (question.answered && question.answerIndex === index) button.classList.add("selected");
+            button.disabled = !isTarget || question.answered;
             const text = document.createElement("span");
             text.textContent = option;
-            const count = document.createElement("span");
-            count.className = "vote-count";
-            count.textContent = `${voteCounts[index]} vote${voteCounts[index] === 1 ? "" : "s"}`;
-            button.append(text, count);
+            button.append(text);
+            if (isTarget && !question.answered) {
+              button.addEventListener("click", () => send("answer", { optionIndex: index }));
+            }
             answers.append(button);
           });
           stage.append(answers);
-          if (game.revealed) {
-            const result = document.createElement("p");
-            result.className = "result-banner visible";
-            const max = Math.max(...voteCounts);
-            const winners = question.options.filter((_, index) => voteCounts[index] === max);
-            result.textContent = max === 0 ? "Pas encore de vote." : winners.length > 1 ? `Égalité : ${winners.join(" et ")}.` : `Le choix du groupe : ${winners[0]} (${max} vote${max === 1 ? "" : "s"}).`;
-            stage.append(result);
-          }
-          if (!game.revealed) stage.append(makeOnlineButton("Révéler les votes", "rose-button", () => send("reveal")));
         }
-        stage.append(makeOnlineButton("Terminer mon tour →", "gold-button", () => send("next")));
-        stage.append(makeOnlineButton("Passer cette question", "subtle-button", () => send("next")));
-      }
 
-      function renderOnlineVotes() {
-        if (room.game.question?.options.length) renderOnlineQuestion();
+        if (!question.answered) {
+          if (!question.options.length && isTarget) {
+            const form = document.createElement("form");
+            form.className = "response-box";
+            const label = document.createElement("label");
+            label.textContent = "Votre réponse";
+            const textarea = document.createElement("textarea");
+            textarea.maxLength = 500;
+            textarea.placeholder = "Écrivez votre réponse…";
+            textarea.setAttribute("aria-label", "Votre réponse");
+            const submit = document.createElement("button");
+            submit.type = "submit";
+            submit.className = "gold-button";
+            submit.textContent = "Envoyer ma réponse";
+            form.append(label, textarea, submit);
+            form.addEventListener("submit", event => {
+              event.preventDefault();
+              send("answer", { text: textarea.value });
+            });
+            stage.append(form);
+            textarea.focus();
+          } else {
+            const waiting = document.createElement("p");
+            waiting.className = "picker-note";
+            waiting.textContent = question.options.length
+              ? `${question.targetName} choisit sa réponse…`
+              : `${question.targetName} répond…`;
+            if (isAsker) waiting.textContent = `En attente de ${question.targetName}…`;
+            stage.append(waiting);
+          }
+        } else {
+          const answer = document.createElement("p");
+          answer.className = "answer-banner";
+          const author = document.createElement("strong");
+          author.textContent = `${question.targetName} répond : `;
+          answer.append(author, document.createTextNode(question.answer));
+          stage.append(answer);
+        }
+
+        if (isAsker) {
+          const actions = document.createElement("div");
+          actions.className = "card-actions";
+          actions.append(question.answered
+            ? makeOnlineButton("Interroger quelqu'un d'autre", "gold-button", () => send("clearQuestion"))
+            : makeOnlineButton("Changer de question", "subtle-button", () => send("clearQuestion")));
+          actions.append(makeOnlineButton("Passer la main →", "rose-button", () => send("next")));
+          stage.append(actions);
+        } else if (isTarget && question.answered) {
+          const note = document.createElement("p");
+          note.className = "picker-note";
+          note.textContent = "Votre réponse est affichée chez tout le monde. Attendez la prochaine question.";
+          stage.append(note);
+        }
       }
 
       function renderFinished() {
-        setHidden("#onlineModes", true);
         $net("#onlineCard").replaceChildren();
         const game = room.game;
-        const recap = card("La soirée", `${game.turn - 1} tour(s) · ${game.questionsAsked} question(s) · ${game.answersGiven} réponse(s). Merci pour la confiance et les fous rires.`);
+        const recap = card("La soirée", `${game.questionsAsked} question(s) · ${game.answersGiven} réponse(s).`);
         $net("#onlineCard").append(recap);
         game.history.slice(-8).reverse().forEach(item => {
           const line = document.createElement("p");
           line.className = "picker-note";
-          line.textContent = `${item.player} · ${item.mode} : ${item.text}`;
+          line.textContent = `${item.asker} → ${item.target} : ${item.text}${item.answer ? ` — ${item.answer}` : ""}`;
           $net("#onlineCard").append(line);
         });
       }
@@ -1838,8 +1907,17 @@
       }
 
       function askPrompt(mode) {
+        if (!room.game.started || room.game.ended) return;
+        if (room.players[room.game.activeIndex]?.id !== playerId) {
+          $net("#onlineNotice").textContent = "C'est au tour d'un autre joueur de poser les questions.";
+          return;
+        }
         if (room.game.question) {
-          $net("#onlineNotice").textContent = "Terminez le tour actuel avant de choisir une autre question.";
+          $net("#onlineNotice").textContent = "Une question est déjà en cours.";
+          return;
+        }
+        if (!selectedTargetId || !room.players.some(player => player.id === selectedTargetId && player.id !== playerId)) {
+          $net("#onlineNotice").textContent = "Choisissez d'abord la personne à interroger.";
           return;
         }
         if (mode === "adult" && !room.game.adultUnlocked) {
@@ -1861,8 +1939,6 @@
           const entry = onlinePrompts.qcm[Math.floor(Math.random() * onlinePrompts.qcm.length)];
           text = entry.question;
           options = entry.options;
-        } else if (mode === "guessWho") {
-          text = "Décris cette personne sans la nommer.";
         } else if (mode === "adult") {
           const category = $net("#onlineCustomCategory").value;
           const pool = room.customQuestions.filter(item => item.category === category);
@@ -1873,7 +1949,7 @@
           const pool = onlinePrompts[mode];
           text = pool[Math.floor(Math.random() * pool.length)];
         }
-        send("prompt", { mode, text, options });
+        send("prompt", { mode, text, options, targetId: selectedTargetId });
       }
 
       roomForm.addEventListener("submit", event => {
@@ -1907,6 +1983,32 @@
         send("rename", { name });
       });
       $net("#onlineStart").addEventListener("click", () => send("start"));
+      $net("#onlineTarget").addEventListener("change", event => {
+        selectedTargetId = event.target.value;
+      });
+      $net("#onlineQuestionForm").addEventListener("submit", event => {
+        event.preventDefault();
+        if (!room) return;
+        $net("#onlineNotice").textContent = "";
+        if (!selectedTargetId || !room.players.some(player => player.id === selectedTargetId && player.id !== playerId)) {
+          $net("#onlineNotice").textContent = "Choisissez d'abord la personne à interroger.";
+          return;
+        }
+        const input = $net("#onlineQuestionText");
+        const text = input.value.trim();
+        if (!text) {
+          $net("#onlineNotice").textContent = "Écrivez votre question avant de l'envoyer.";
+          input.focus();
+          return;
+        }
+        const mode = $net("#onlineQuestionMode").value;
+        if (mode === "adult" && !room.game.adultUnlocked) {
+          $net("#onlineNotice").textContent = "Le mode 18+ n'est pas déverrouillé.";
+          return;
+        }
+        send("prompt", { mode, text: text.slice(0, 500), options: [], targetId: selectedTargetId });
+        input.value = "";
+      });
       function fallbackCopyText(text) {
         const helper = document.createElement("textarea");
         helper.value = text;
@@ -1946,7 +2048,6 @@
         }, 2000);
       }
       $net("#onlineCopyCode").addEventListener("click", copyRoomCode);
-      $net("#onlineEnd").addEventListener("click", () => send("finish"));
       $net("#onlineLeave").addEventListener("click", () => {
         const leftCode = room ? room.code : "";
         if (socket) socket.close(1000, "Joueur parti");
@@ -1955,10 +2056,14 @@
         playerId = null;
         debugVisible = false;
         lastQuestionKey = "";
+        selectedTargetId = "";
         window.clearTimeout(copyFeedbackTimer);
         if (leftCode) clearIdentity(leftCode);
         $net("#onlineCopyCode").textContent = "Copier le code";
         $net("#onlineName").value = "";
+        $net("#onlineQuestionText").value = "";
+        setHidden("#onlineAskPanel", true);
+        setHidden("#onlineWaiting", true);
         setHidden("#onlineDebug", true);
         $net("#onlineDebug").classList.remove("visible");
         $net("#onlineNotice").textContent = "";
