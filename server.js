@@ -11,9 +11,11 @@ const HOST = "0.0.0.0";
 const DATA_FILE = path.join(__dirname, "data", "rooms.json");
 const MAX_PLAYERS = 12;
 const MAX_MESSAGE_BYTES = 16 * 1024;
+const HOST_GRACE_MS = 60 * 1000;
 const rooms = new Map();
 const clients = new Map();
 const handoverTimers = new Map();
+const roomCloseTimers = new Map();
 
 function loadRooms() {
   if (!fs.existsSync(DATA_FILE)) return;
@@ -137,12 +139,23 @@ function createRoom(name, socket) {
   persistAndBroadcast(room);
 }
 
-function joinRoom(code, name, reconnectId, socket) {
+function joinRoom(code, name, reconnectId, socket, reclaim = false) {
   const room = rooms.get(code);
   if (!room) return sendError(socket, "Salle introuvable. Vérifiez le code à 6 chiffres.");
   let player = reconnectId ? room.players.find(item => item.id === reconnectId) : null;
   if (player && room.connections.has(player.id)) {
-    return sendError(socket, "Ce joueur est déjà connecté à cette salle.");
+    const existing = room.connections.get(player.id);
+    if (!reclaim || existing === socket) {
+      return sendError(socket, "Ce joueur est déjà connecté à cette salle.");
+    }
+    // Reprise automatique après une coupure : l'ancienne liaison est remplacée.
+    clients.delete(existing);
+    room.connections.delete(player.id);
+    try {
+      existing.close(4000, "Place reprise");
+    } catch (error) {
+      console.error("Impossible de fermer l'ancienne liaison :", error.message);
+    }
   }
   if (!player && name) {
     player = room.players.find(item => item.name.toLocaleLowerCase("fr") === name.toLocaleLowerCase("fr"));
@@ -161,6 +174,8 @@ function joinRoom(code, name, reconnectId, socket) {
   cancelHandover(player.id);
   room.connections.set(player.id, socket);
   clients.set(socket, { room, playerId: player.id });
+  // L'hôte est revenu : la salle ne doit pas se fermer.
+  if (player.id === room.hostId) cancelRoomClose(room.code);
   persistAndBroadcast(room);
 }
 
@@ -184,6 +199,38 @@ function scheduleHandover(room, playerId) {
       }
     }
   }, 15000));
+}
+
+function cancelRoomClose(code) {
+  const timer = roomCloseTimers.get(code);
+  if (timer) {
+    clearTimeout(timer);
+    roomCloseTimers.delete(code);
+  }
+}
+
+function closeRoom(room, reason) {
+  cancelRoomClose(room.code);
+  for (const [playerId, socket] of [...room.connections]) {
+    cancelHandover(playerId);
+    send(socket, { type: "closed", reason });
+    clients.delete(socket);
+  }
+  room.connections.clear();
+  rooms.delete(room.code);
+  saveRooms();
+}
+
+// Si l'hôte disparaît sans le vouloir, sa salle reste ouverte pendant une minute.
+// Revenir dans ce délai annule la fermeture ; sinon tout le monde repart sur un nouveau code.
+function scheduleRoomClose(room) {
+  cancelRoomClose(room.code);
+  roomCloseTimers.set(room.code, setTimeout(() => {
+    roomCloseTimers.delete(room.code);
+    if (!room.connections.has(room.hostId)) {
+      closeRoom(room, "L'hôte ne s'est pas reconnecté. La salle est fermée, créez-en une nouvelle.");
+    }
+  }, HOST_GRACE_MS));
 }
 
 function changeTurn(room, index) {
@@ -228,7 +275,7 @@ function handleMessage(socket, data) {
     const code = typeof message.code === "string" ? message.code.trim() : "";
     if (!/^\d{6}$/.test(code)) return sendError(socket, "Le code de salle doit contenir 6 chiffres.");
     const reconnectId = typeof message.playerId === "string" ? message.playerId : "";
-    return joinRoom(code, name, reconnectId, socket);
+    return joinRoom(code, name, reconnectId, socket, message.reclaim === true);
   }
 
   const context = clients.get(socket);
@@ -401,14 +448,14 @@ function handleMessage(socket, data) {
       persistAndBroadcast(room);
       break;
     case "leave":
-      socket.close(1000, "Joueur parti");
+      // Départ volontaire : si c'est l'hôte, la salle se ferme pour tout le monde.
+      if (isHost) closeRoom(room, "L'hôte a quitté la salle. Elle est fermée, créez-en une nouvelle.");
+      else socket.close(1000, "Joueur parti");
       break;
     default:
       sendError(socket, "Commande inconnue.");
   }
 }
-
-loadRooms();
 
 const server = http.createServer((request, response) => {
   const pathname = new URL(request.url, `http://${request.headers.host}`).pathname;
@@ -455,15 +502,17 @@ webSocketServer.on("connection", socket => {
     room.connections.delete(playerId);
     const player = playerFor(room, playerId);
     if (player) player.online = false;
-    // Si l'hôte quitte la salle, le premier joueur encore connecté prend le relais.
-    if (room.hostId === playerId) {
-      const nextHost = room.players.find(item => room.connections.has(item.id));
-      if (nextHost) room.hostId = nextHost.id;
-    }
+    // Plus de transfert automatique : sans l'hôte, la salle ferme après un délai de grâce.
+    if (room.hostId === playerId) scheduleRoomClose(room);
     scheduleHandover(room, playerId);
     persistAndBroadcast(room);
   });
 });
+
+loadRooms();
+// Après un redémarrage, les salles restaurées n'ont aucun joueur connecté :
+// l'hôte dispose du même délai de grâce pour revenir avant leur fermeture.
+for (const room of rooms.values()) scheduleRoomClose(room);
 
 server.listen(PORT, HOST, () => console.log(`Entre Nous écoute sur http://localhost:${PORT}`));
 

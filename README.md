@@ -23,19 +23,29 @@ Ne lancez pas le fichier par double-clic (`file://`) pour le multijoueur. Le jeu
 
 ## Jouer en réseau
 
-1. L'hôte laisse le code vide pour créer une salle. Un nom par défaut (« Joueur 1 ») est attribué, puis peut être modifié dans la salle.
-2. Il partage le code à 6 chiffres affiché en grand sur la page de la salle, avec le bouton **Copier le code**.
-3. Chaque autre joueur entre uniquement le code pour rejoindre, puis choisit son nom dans la salle. Chaque appareil ou onglet représente un joueur distinct.
+1. Sur l'accueil, **Créer une nouvelle salle** ouvre une salle et attribue un nom par défaut (« Joueur 1 »), modifiable dans la salle. Aucun prénom n'est demandé avant la connexion.
+2. L'hôte partage le code à 6 chiffres affiché en grand sur la page de la salle, avec le bouton **Copier le code**. Le code reste le même tant que la salle existe.
+3. Chaque autre joueur entre uniquement le code avec **Rejoindre la salle**, puis choisit son nom dans la salle. Chaque appareil ou onglet représente un joueur distinct : un nouvel onglet qui saisit le code entre comme nouveau joueur.
 4. L'hôte lance la partie dès que deux joueurs ou plus sont présents.
-5. Le joueur dont c'est le tour choisit une personne dans **À qui posez-vous la question ?**, puis écrit sa propre question ou laisse le jeu en choisir une (Vérité, Action, Choix multiple, Tu préfères, 18+).
+5. Le joueur dont c'est le tour choisit une personne dans **À qui posez-vous la question ?**, puis un mode (Vérité, Action, Choix multiple, Tu préfères, 18+). Le jeu propose une question dans une zone modifiable : on peut l'ajuster, demander **Autre proposition**, ou cliquer sur **Écrire ma propre question** pour la remplacer directement. **Poser cette question** l'envoie.
 6. La question s'affiche sur tous les appareils. Seule la personne interrogée peut répondre ; sa réponse apparaît automatiquement chez tout le monde, sans bouton « Révéler ».
 7. Le poseur peut interroger plusieurs personnes à la suite avec **Interroger quelqu'un d'autre**, puis **Passer la main** pour laisser le tour au joueur suivant. Ctrl+Maj+D affiche le menu debug caché.
 
-Le bouton **Retour à l'accueil** quitte la salle et ramène à l'écran de connexion. Il n'y a pas de bouton pour terminer la soirée : on revient simplement à l'accueil.
+Le bouton **Retour à l'accueil** ramène à l'écran de connexion. Il n'y a pas de bouton pour terminer la soirée en ligne : on revient simplement à l'accueil. Un joueur qui n'est pas l'hôte peut revenir à l'accueil sans perdre sa place, puis la reprendre plus tard.
 
-L'hôte est le premier joueur à créer la salle. Il est le seul à pouvoir lancer/rejouer. S'il quitte la salle, le premier joueur encore connecté devient hôte automatiquement. Seul le joueur actif pose les questions et peut passer la main. Si ce joueur ferme son onglet, la main passe automatiquement au joueur suivant après quelques secondes (le temps qu'il puisse se reconnecter). Les joueurs absents restent dans la liste ; un rafraîchissement dans le même onglet permet de reprendre sa place en saisissant à nouveau le code.
+### Reprendre une salle
 
-Le mode 18+ demande le code **6969**. Les questions personnalisées ajoutées dans ce mode sont enregistrées dans la salle côté serveur. Seul l'identifiant de session du joueur est conservé dans le stockage de session de l'onglet, pour reprendre sa place après un rafraîchissement.
+- La place d'un onglet est conservée dans le stockage de session du navigateur : un rafraîchissement permet de retrouver la même place en ressaisissant le code.
+- Le bouton **Reprendre la salle** de l'accueil retrouve la dernière salle fréquentée sur cet appareil. Il s'appuie sur une liste de places enregistrées pour chaque salle et essaie l'hôte en priorité, puis les autres places. Si toutes sont déjà ouvertes ailleurs, le joueur entre comme nouveau joueur.
+- Une coupure réseau passagère est reprise automatiquement par le client, sans recréer de salle.
+- Un départ volontaire de l'hôte ferme la salle immédiatement pour tout le monde : les autres joueurs doivent créer une nouvelle salle et obtiennent un nouveau code.
+- Si l'hôte disparaît sans le vouloir (coupure, onglet fermé), sa salle reste ouverte pendant 60 secondes. S'il revient dans ce délai, elle reste en place ; sinon elle est fermée et les joueurs restants reviennent à l'accueil. Le rôle d'hôte n'est plus transféré automatiquement.
+
+L'hôte est le premier joueur à créer la salle. Il est le seul à pouvoir lancer/rejouer. Seul le joueur actif pose les questions et peut passer la main. Si ce joueur ferme son onglet, la main passe automatiquement au joueur suivant après quelques secondes (le temps qu'il puisse se reconnecter). Les joueurs absents restent dans la liste.
+
+Le mode 18+ demande le code **6969**. Les questions personnalisées ajoutées dans ce mode sont enregistrées dans la salle côté serveur.
+
+Le jeu hors ligne reste disponible sans serveur : sur l'accueil, dépliez **Jouer à plusieurs sur un seul appareil** pour saisir les prénoms et lancer une partie en passant le téléphone.
 
 ## Déploiement sur Render (offre gratuite)
 
