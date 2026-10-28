@@ -10,7 +10,8 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = "0.0.0.0";
 const DATA_FILE = path.join(__dirname, "data", "rooms.json");
 const MAX_PLAYERS = 12;
-const MAX_MESSAGE_BYTES = 16 * 1024;
+const MAX_MESSAGE_BYTES = 640 * 1024;
+const MAX_IMAGE_CHARS = 400000;
 const HOST_GRACE_MS = 60 * 1000;
 const rooms = new Map();
 const clients = new Map();
@@ -39,7 +40,11 @@ function saveRooms() {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   const serialized = [...rooms.values()].map(({ connections, ...room }) => ({
     ...room,
-    players: room.players.map(({ online, ...player }) => player)
+    players: room.players.map(({ online, ...player }) => player),
+    // Les photos de preuve ne sont jamais écrites sur disque.
+    game: room.game && room.game.question
+      ? { ...room.game, question: { ...room.game.question, image: "" } }
+      : room.game
   }));
   const temporaryFile = `${DATA_FILE}.tmp`;
   fs.writeFileSync(temporaryFile, JSON.stringify(serialized, null, 2), "utf8");
@@ -73,12 +78,14 @@ function nextGuestName(room) {
   return name;
 }
 
-function roomSnapshot(room, playerId) {
+function roomSnapshot(room, playerId, socket = null) {
   const game = { ...room.game };
   delete game.guessTarget;
   delete game.guesses;
   return {
     type: "room",
+    // Lien d'invitation renvoyé avec la confirmation de salle.
+    invite: inviteUrl(socket, room.code),
     room: {
       code: room.code,
       kind: room.kind,
@@ -91,7 +98,8 @@ function roomSnapshot(room, playerId) {
 }
 
 function broadcast(room) {
-  for (const [playerId, socket] of room.connections) send(socket, roomSnapshot(room, playerId));
+  // Chaque joueur reçoit le lien d'invitation depuis sa propre connexion (son domaine).
+  for (const [playerId, socket] of room.connections) send(socket, roomSnapshot(room, playerId, socket));
 }
 
 function persistAndBroadcast(room) {
@@ -101,6 +109,26 @@ function persistAndBroadcast(room) {
 
 function sendError(socket, message) {
   send(socket, { type: "error", message });
+}
+
+// Domaine public de l'application, utilisé pour construire le lien d'invitation.
+// Sur Render, RENDER_EXTERNAL_URL contient déjà l'URL publique (https://mon-app.onrender.com) ;
+// sinon on lit les en-têtes de la requête, ce qui fonctionne aussi en local.
+function baseUrlFromRequest(request) {
+  const external = typeof process.env.RENDER_EXTERNAL_URL === "string" ? process.env.RENDER_EXTERNAL_URL.trim() : "";
+  if (external) return external.replace(/\/+$/, "");
+  const headers = request && request.headers ? request.headers : {};
+  const host = headers.host || `localhost:${PORT}`;
+  const forwarded = typeof headers["x-forwarded-proto"] === "string" ? headers["x-forwarded-proto"].split(",")[0].trim() : "";
+  const protocol = forwarded || (request && request.socket && request.socket.encrypted ? "https" : "http");
+  return `${protocol}://${host}`;
+}
+
+// Lien d'invitation d'une salle : https://domaine/?room=CODE
+// Il n'est jamais écrit sur disque : il est recalculé à chaque envoi.
+function inviteUrl(socket, code) {
+  const base = socket && socket.baseUrl ? socket.baseUrl : `http://localhost:${PORT}`;
+  return `${base}/?room=${code}`;
 }
 
 function makeGame() {
@@ -351,7 +379,7 @@ function handleMessage(socket, data) {
           : "Type de question inconnu.");
       }
       if (mode === "adult" && !game.adultUnlocked) return sendError(socket, "Le jeu sensuel n'est pas disponible dans cette salle.");
-      const category = mode === "adult" && ["truth", "action", "consequence"].includes(message.category) ? message.category : "";
+      const category = mode === "adult" && ["truth", "action", "qcm"].includes(message.category) ? message.category : "";
       if (mode === "adult" && !category) return sendError(socket, "Choisissez une catégorie de question sensuelle.");
       const text = typeof message.text === "string" ? message.text.trim().slice(0, 500) : "";
       const options = Array.isArray(message.options)
@@ -386,6 +414,7 @@ function handleMessage(socket, data) {
         answer: "",
         answerIndex: null,
         answered: false,
+        image: "",
         historyId: historyEntry.id
       };
       game.votes = [];
@@ -412,7 +441,15 @@ function handleMessage(socket, data) {
         answer = game.question.options[optionIndex];
       } else {
         answer = typeof message.text === "string" ? message.text.trim().slice(0, 500) : "";
-        if (!answer) return sendError(socket, "Écrivez votre réponse.");
+        // La preuve photo accompagne la réponse d'une action : elle n'est jamais obligatoire.
+        const image = typeof message.image === "string" ? message.image : "";
+        if (!answer && !image) return sendError(socket, "Écrivez votre réponse.");
+        if (image) {
+          if (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(image) || image.length > MAX_IMAGE_CHARS) {
+            return sendError(socket, "Photo refusée : utilisez une image JPEG, PNG ou WebP plus petite.");
+          }
+          game.question.image = image;
+        }
       }
       game.question.answer = answer;
       game.question.answerIndex = answerIndex;
@@ -505,7 +542,9 @@ server.on("upgrade", (request, socket, head) => {
   webSocketServer.handleUpgrade(request, socket, head, ws => webSocketServer.emit("connection", ws, request));
 });
 
-webSocketServer.on("connection", socket => {
+webSocketServer.on("connection", (socket, request) => {
+  // Domaine public de cette connexion : sert à construire le lien d'invitation.
+  socket.baseUrl = baseUrlFromRequest(request);
   socket.on("message", data => handleMessage(socket, data));
   socket.on("error", error => console.error("Erreur WebSocket :", error.message));
   socket.on("close", () => {

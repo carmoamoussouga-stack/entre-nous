@@ -329,6 +329,13 @@
       line-height: 1;
     }
     #onlineCopyCode { min-height: 44px; padding: 0 18px; font-size: 14px; }
+    /* ---------- Invitation par lien (ajouts uniquement) ---------- */
+    .room-code-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    #onlineInvite { min-height: 44px; padding: 0 18px; font-size: 14px; }
+    .invite-link { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; word-break: break-all; user-select: all; }
+    .invite-note { margin: 0; color: var(--gold); font-size: 13px; text-align: center; }
+    /* Après le retrait de « ✏️ Écrire », il ne reste qu'un bouton dans la ligne. */
+    .draft-mini-actions { grid-template-columns: 1fr; }
     .room-code-hint { max-width: 310px; text-align: center; }
     .mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .mode-button {
@@ -418,6 +425,16 @@
     .modal input { margin-bottom: 12px; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: .22em; }
     .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
     .modal .notice { margin-top: 0; }
+
+    /* ---------- Preuve photo ---------- */
+    .photo-modal { width: min(100%, 440px); }
+    .photo-stage { display: grid; place-items: center; min-height: 170px; margin-bottom: 12px; padding: 12px; border: 1px dashed rgba(212,175,55,.4); border-radius: 20px; background: rgba(255,255,255,.03); }
+    .photo-stage video, .photo-stage img { display: block; width: 100%; max-height: 320px; object-fit: contain; border-radius: 14px; background: #0b0b10; }
+    .photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+    .photo-actions button { width: 100%; }
+    .photo-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .photo-thumb { width: 76px; height: 76px; object-fit: cover; border: 2px solid rgba(212,175,55,.5); border-radius: 14px; background: #0b0b10; }
+    .proof-photo { display: block; width: min(100%, 340px); margin: 14px auto 0; border: 2px solid rgba(212,175,55,.45); border-radius: 20px; object-fit: contain; background: #0b0b10; }
     footer { position: relative; z-index: 1; margin-top: 20px; color: #77737a; font-size: 12px; letter-spacing: .02em; text-align: center; text-transform: none; }
 
     /* ---------- Écran d'entrée : logo + chargement ---------- */
@@ -595,6 +612,27 @@
     <span class="splash-bar" aria-hidden="true"><i></i></span>
     <p class="splash-status" id="splashStatus" role="status">Préparation de la soirée…</p>
   </div>
+  <div class="modal-backdrop" id="photoModal" role="dialog" aria-modal="true" aria-labelledby="photoTitle">
+    <div class="modal photo-modal">
+      <h2 id="photoTitle">📷 Preuve photo</h2>
+      <p>Prends une photo avec la caméra ou importe-en une depuis l'appareil.</p>
+      <div class="photo-stage">
+        <video id="photoVideo" autoplay playsinline hidden></video>
+        <img id="photoPreview" alt="Aperçu de la photo" hidden>
+        <canvas id="photoCanvas" hidden></canvas>
+      </div>
+      <p class="notice" id="photoNotice" role="status"></p>
+      <div class="photo-actions">
+        <button class="gold-button" id="photoShoot" type="button" hidden>📸 Prendre</button>
+        <button class="subtle-button" id="photoImport" type="button">📁 Importer</button>
+        <button class="subtle-button" id="photoRetake" type="button" hidden>🔄 Reprendre</button>
+        <button class="gold-button" id="photoConfirm" type="button" hidden>✔ Utiliser</button>
+        <button class="subtle-button" id="photoCancel" type="button">✖ Annuler</button>
+      </div>
+      <input id="photoFile" type="file" accept="image/*" hidden>
+    </div>
+  </div>
+
   <script>
     (() => {
       "use strict";
@@ -726,7 +764,7 @@
             <select id="adultCategory">
               <option value="truth">💋 Vérité chaude</option>
               <option value="action">🔥 Action sensuelle</option>
-              <option value="consequence">😵 Conséquence</option>
+              <option value="qcm">🍑 Choix multiple</option>
             </select>
             <label for="adultPromptSelect">Question</label>
             <select id="adultPromptSelect"></select>
@@ -762,7 +800,7 @@
         <div class="panel">
           <div class="mode-grid" id="modeGrid">
             <button class="mode-button" data-mode="av" type="button"><span class="mode-icon">🔥</span><span class="mode-name">Action ou vérité</span></button>
-            <button class="mode-button" data-mode="vc" type="button"><span class="mode-icon">💀</span><span class="mode-name">Vérité ou conséquence</span></button>
+            <button class="mode-button" data-mode="vc" type="button"><span class="mode-icon">🎲</span><span class="mode-name">Vérité ou choix multiple</span></button>
             <button class="mode-button" data-mode="qcm" type="button"><span class="mode-icon">📝</span><span class="mode-name">Question à choix</span></button>
             <button class="mode-button" data-mode="wouldYouRather" type="button"><span class="mode-icon">🤔</span><span class="mode-name">Tu préfères</span></button>
             <button class="mode-button" data-mode="guessWho" type="button"><span class="mode-icon">🙈</span><span class="mode-name">Devine qui</span></button>
@@ -799,7 +837,12 @@
             <div class="room-code-card">
               <p class="room-code-label" id="onlineRoomCodeLabel">Code de la salle</p>
               <p class="room-code-value" id="onlineRoomCode" aria-label="Code de la salle à 6 chiffres">------</p>
-              <button class="subtle-button" id="onlineCopyCode" type="button">📋 Copier</button>
+              <div class="room-code-actions">
+                <button class="subtle-button" id="onlineCopyCode" type="button">📋 Copier</button>
+                <button class="subtle-button" id="onlineInvite" type="button">💌 Inviter un ami</button>
+              </div>
+              <p class="invite-link" id="onlineInviteLink" hidden></p>
+              <p class="invite-note" id="onlineInviteNote" hidden>Lien copié !</p>
             </div>
             <button class="gold-button wide" id="onlineStart" type="button" hidden>🚀 Lancer la partie</button>
           </div>
@@ -809,7 +852,7 @@
                 <label for="onlineTarget">❓ À qui ?</label>
                 <select id="onlineTarget" aria-label="Personne à interroger"></select>
               </div>
-              <p class="picker-note ask-or" id="onlineAskNote">Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.</p>
+              <p class="picker-note ask-or" id="onlineAskNote">Choisissez un mode : le jeu propose une question, que vous pouvez ajuster ou remplacer avec 🔄 Autre proposition.</p>
               <div class="mode-grid" id="onlineModes">
                 <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">💬</span><span class="mode-name">Vérité</span></button>
                 <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">⚡</span><span class="mode-name">Action</span></button>
@@ -819,9 +862,8 @@
               <div class="mode-grid" id="onlineSensualModes" hidden>
                 <button class="mode-button rose-mode" data-sensual-category="truth" type="button"><span class="mode-icon">💋</span><span class="mode-name">Vérité chaude</span></button>
                 <button class="mode-button rose-mode" data-sensual-category="action" type="button"><span class="mode-icon">🔥</span><span class="mode-name">Action sensuelle</span></button>
-                <button class="mode-button rose-mode" data-sensual-category="consequence" type="button"><span class="mode-icon">😵</span><span class="mode-name">Conséquence</span></button>
+                <button class="mode-button rose-mode" data-sensual-category="qcm" type="button"><span class="mode-icon">🍑</span><span class="mode-name">Choix multiple</span></button>
               </div>
-              <button class="subtle-button wide ask-custom" id="onlineWriteOwn" type="button">✏️ Écrire ma propre question</button>
               <div class="draft-box" id="onlineDraft" hidden>
                 <label for="onlineDraftText">Votre question</label>
                 <textarea id="onlineDraftText" maxlength="500" placeholder="Écrivez la question que vous voulez poser…"></textarea>
@@ -831,7 +873,6 @@
                   <button class="gold-button" id="onlineDraftSend" type="button">✔ Poser cette question</button>
                   <div class="draft-mini-actions">
                     <button class="subtle-button" id="onlineDraftAgain" type="button">🔄 Autre proposition</button>
-                    <button class="subtle-button" id="onlineDraftCustom" type="button">✏️ Écrire</button>
                   </div>
                 </div>
               </div>
@@ -958,38 +999,6 @@
           "Fais un discours de remerciement de dix secondes.",
           "Mime ta façon de célébrer une excellente nouvelle."
         ],
-        consequence: [
-          "Laisse le groupe choisir ta prochaine chanson d'ambiance.",
-          "Pendant un tour, réponds en faisant une rime si tu peux.",
-          "Échange ta place avec la personne qui a le même mois d'anniversaire que toi.",
-          "Laisse quelqu'un te donner un surnom gentil pour le reste de la partie.",
-          "Raconte ta dernière bonne nouvelle avec le plus de suspense possible.",
-          "Pendant une minute, sois le commentateur sportif de la soirée.",
-          "Choisis une personne : elle pose la prochaine question à ta place.",
-          "Fais un mini-discours en défendant ton goûter préféré.",
-          "Échange un fait amusant sur toi avec la personne de ton choix.",
-          "Laisse le groupe choisir un thème pour ta prochaine anecdote.",
-          "Jusqu'au prochain tour, termine tes phrases par « quelle aventure ».",
-          "Fais une recommandation de livre, série ou film au groupe.",
-          "Improvise un jingle pour un objet présent dans la pièce.",
-          "Choisis un mot interdit pour toi jusqu'à ton prochain tour.",
-          "Raconte un moment drôle sans prononcer la lettre « e ».",
-          "Laisse quelqu'un choisir un emoji qui te représente ce soir.",
-          "Fais une présentation très sérieuse de ton snack idéal.",
-          "Donne à chaque personne un nom de code de film d'espionnage.",
-          "Pendant trente secondes, défends une opinion complètement inoffensive.",
-          "Demande au groupe une question à laquelle tu aimerais répondre.",
-          "Fais une mini-interview de la personne de ton choix.",
-          "Trouve un conseil de vie dans l'objet le plus proche de toi.",
-          "Raconte un souvenir heureux comme si c'était une épopée héroïque.",
-          "Laisse le groupe te choisir un partenaire pour le prochain mime.",
-          "Explique ton petit-déjeuner idéal comme un critique gastronomique.",
-          "Fais un salut royal à toute l'assemblée.",
-          "Invente une devise pour l'équipe de ce soir.",
-          "Fais deviner ton humeur en ne disant que trois mots.",
-          "Choisis quelqu'un pour partager un souvenir avec toi.",
-          "Remercie sincèrement une personne ici pour une qualité qu'elle a."
-        ],
         qcm: [
           { question: "Pour une escapade improvisée, tu choisis…", options: ["Une cabane au calme", "Une ville inconnue", "La mer au coucher du soleil", "Un train sans destination"] },
           { question: "La soirée parfaite commence par…", options: ["Un bon repas", "Une playlist parfaite", "Des amis réunis", "Une idée inattendue"] },
@@ -1024,108 +1033,63 @@
           }
         ],
         adultTruth: [
-          "Quel fantasme romantique ou sensuel gardes-tu d'habitude pour toi ? Tu peux rester vague.",
-          "Quelle est la chose la plus audacieuse que tu aies faite pour séduire quelqu'un ?",
-          "Décris ton idéal de rendez-vous sensuel en une phrase.",
-          "Quel détail chez quelqu'un te fait immédiatement de l'effet ?",
-          "Quelle tension de flirt t'a déjà fait perdre le fil de la conversation ?",
-          "Quel compliment te ferait rougir même si tu essayais de le cacher ?",
-          "Quelle tenue te donne le sentiment d'être irrésistible ?",
-          "As-tu déjà eu un crush inattendu ? Raconte sans citer son nom.",
-          "Quel serait ton rendez-vous romantique idéal, du premier regard au dernier au revoir ?",
-          "Qu'est-ce qui rend une personne irrésistible à tes yeux ?",
-          "Dans un jeu de séduction consenti, préfères-tu mener la danse ou te laisser surprendre ?",
-          "Quel genre de flirt te plaît : subtil, direct, joueur ou mystérieux ?",
-          "Quel geste tendre, avec ton accord, te ferait fondre ?",
-          "As-tu déjà eu un coup de foudre ? Qu'est-ce qui t'a marqué·e ?",
-          "Quelle chanson mettrait l'ambiance à un rendez-vous qui fait monter la tension ?",
-          "Quel est ton talent secret pour faire comprendre que quelqu'un te plaît ?",
-          "Qu'est-ce qui te fait te sentir désiré·e, respecté·e et en confiance ?",
-          "Quelle personnalité célèbre t'a déjà fait craquer, et pourquoi ?",
-          "Quelle attention romantique t'a donné des papillons dans le ventre ?",
-          "Quel genre de regard te déstabilise agréablement ?",
-          "Quel trait de caractère te charme plus que l'apparence ?",
-          "As-tu déjà pris l'initiative alors que tu hésitais ?",
-          "Quel jeu de pouvoir léger et consenti t'intrigue : choisir une chanson, guider une danse ou faire durer le suspense ?",
-          "Quelle est ta façon préférée de montrer ton intérêt sans dire un mot ?",
-          "Quel scénario de rencontre te ferait sourire et rougir à la fois ?",
-          "Quel est le message de flirt le plus réussi que tu aies reçu ?",
-          "Quelle limite ou quel signe de confiance rend l'intimité plus agréable pour toi ?",
-          "Quel type de rendez-vous te fait te sentir le plus séduisant·e ?",
-          "Qu'est-ce qui transforme une attirance en vraie complicité ?",
-          "Quelle question sensuelle, mais respectueuse, aimerais-tu qu'on te pose ?"
+          "Décris ton fantasme le plus brûlant — jusque dans les détails.",
+          "Quel endroit de ton corps aime-t-on te caresser pour te faire fondre ?",
+          "Raconte ta nuit la plus excitante, sans pruderie.",
+          "Qu'est-ce qui te fait jouir le plus vite : les mains, la bouche ou les mots ?",
+          "Quel type de baiser te fait perdre la tête à chaque fois ?",
+          "Décris la chose la plus osée que tu aies faite au lit.",
+          "Tu préfères qu'on te domine ou qu'on te laisse guider ? Explique.",
+          "Quelle partie de ton corps te rend folle quand on l'embrasse ?",
+          "Raconte un rêve érotique que tu as vraiment eu.",
+          "Qu'est-ce qui te met le plus en excitation tout de suite ?",
+          "Cite ta position préférée et pourquoi elle te rend dingue.",
+          "Quel message coquin aimerais-tu recevoir maintenant ?",
+          "Tu aimes les caresses douces ou les gestes plus durs ? Précise.",
+          "Décris exactement ce que tu aimerais qu'on te fasse ce soir.",
+          "Quelle odeur (peau, sueur, parfum) te rend immédiatement excité·e ?",
+          "Quelle fantaisie intime n'as-tu jamais osé avouer à personne ?",
+          "Raconte la fois où tu as joui le plus fort et ce qui a provoqué ça.",
+          "Tu fantasmes sur quelle situation interdite quand tu te touches ?",
+          "Qu'est-ce qui te fait geindre sans que personne n'ait besoin de forcer ?",
+          "Décris ta journée idéale qui finit à quatre pattes.",
+          "Quelle partie de ta peau, si on l'embrasse longuement, te fait jouir ?",
+          "Dis à voix haute le compliment le plus cochon que tu aimerais entendre.",
+          "Quel jouet de plaisir n'as-tu jamais essayé et que tu voudrais tester ?",
+          "Tu préfères un réveil avec des caresses ou une surprise plus franche ?"
         ],
         adultAction: [
-          "Choisis un·e volontaire et échangez un compliment de séduction, seulement si vous en avez envie.",
-          "Murmure une phrase de flirt inventée à voix haute — sans viser quelqu'un en particulier.",
-          "Décris ton rendez-vous idéal comme la bande-annonce d'un film sensuel, sans détails explicites.",
-          "Fais un toast à la personne ici qui a le charme le plus discret.",
-          "Raconte ta technique de flirt la plus maladroite avec un aplomb irrésistible.",
-          "Laisse le groupe choisir un mot doux à glisser dans ta prochaine phrase.",
-          "Décris ton type idéal en trois indices, sans nommer personne dans la pièce.",
-          "Avec une personne volontaire, joue le ou la maître·sse du jeu : propose deux poses glamour, avec le droit de passer.",
-          "Invente le titre d'un roman de séduction inspiré de cette soirée.",
-          "Propose une playlist de trois chansons pour faire monter doucement la tension d'un rendez-vous.",
-          "Échange un regard complice de trois secondes avec une personne volontaire, puis détourne les yeux avec panache.",
-          "Fais durer le suspense cinq secondes avant de révéler le compliment que tu as choisi.",
-          "Raconte une anecdote de séduction en changeant les prénoms.",
-          "Fais une déclaration passionnée à ton dessert préféré.",
-          "Choisis un·e volontaire et inventez le nom d'un cocktail qui vous ressemble.",
-          "Mime ta réaction quand ton crush t'envoie un message.",
-          "Fais-toi un compliment avec une assurance irrésistible.",
-          "Donne un conseil de séduction joueur et respectueux au groupe.",
-          "Décris ton rendez-vous rêvé uniquement avec des emojis, puis traduis-les.",
-          "Fais deviner ton plus grand charme en trois gestes, sans toucher personne.",
-          "Inventez ensemble une rencontre de comédie romantique, une phrase chacun.",
-          "Décris la personne de ton choix comme le personnage principal d'une romance, avec son accord.",
-          "Choisis une chanson qui résume ta vie amoureuse et fredonne le refrain.",
-          "Fais une révérence galante à une personne volontaire.",
-          "Invente un premier message de flirt charmant, sans l'envoyer à personne.",
-          "Présente ton toi célibataire comme une annonce de rencontre très élégante.",
-          "Joue une scène de rencontre dans un café avec un volontaire, chacun peut arrêter la scène.",
-          "Fais un compliment sur le style d'une personne qui est d'accord.",
-          "Décris ton aura de rendez-vous en trois mots délicieusement suggestifs.",
-          "Invente une réplique de séduction qui fait monter la tension sans mettre la pression."
-        ],
-        adultConsequence: [
-          "Choisis : recevoir un compliment ou en offrir un à une personne volontaire.",
-          "Raconte une anecdote de flirt en gardant tous les prénoms secrets.",
-          "Le groupe choisit une chanson de slow imaginaire ; improvise deux pas si tu en as envie.",
-          "Choisis un titre galant pour la personne de ton choix, uniquement si elle est d'accord.",
-          "Décris ton rendez-vous de rêve sans utiliser les mots « dîner » ni « cinéma ».",
-          "Propose à une personne volontaire un duel de regards de trois secondes ; elle peut dire non sans explication.",
-          "Donne à la personne de ton choix un conseil amoureux bienveillant.",
-          "Présente une personne volontaire comme la star d'une comédie romantique.",
-          "Invente un surnom glamour pour toi-même pour le reste du tour.",
-          "Partage une chose qui te fait te sentir apprécié·e et désiré·e.",
-          "Choisis un·e volontaire et écrivez à deux le pitch d'une romance de vacances.",
-          "Fais une recommandation de chanson pour une scène de séduction au cinéma.",
-          "Raconte un joli moment de complicité, sans détails personnels que tu préfères garder privés.",
-          "Laisse le groupe inventer un titre de romance pour ta vie sentimentale.",
-          "Fais un compliment à une personne qui ne l'a pas encore reçu ce soir.",
-          "Choisis une personne volontaire et échangez une poignée de main façon film d'espionnage amoureux.",
-          "Décris l'ambiance d'un rendez-vous parfait avec seulement cinq mots.",
-          "Porte un toast au respect des limites et au charme du consentement.",
-          "Nomme trois qualités non physiques que tu trouves attirantes.",
-          "Prends le rôle de maître·sse du suspense : propose à une personne volontaire deux compliments au choix, ou le droit de passer.",
-          "Raconte ton plus grand fou rire lors d'un rendez-vous.",
-          "Donne au groupe ton meilleur conseil pour faire monter la tension sans pression.",
-          "Invente une réplique de séduction tellement élégante qu'elle en devient drôle.",
-          "Fais à toi-même le compliment que tu aimerais entendre plus souvent.",
-          "Demande à une personne volontaire quel est son rendez-vous idéal.",
-          "Offre un compliment sincère à une personne volontaire, ou passe.",
-          "Imagine un nom de parfum inspiré par ton pouvoir de séduction.",
-          "Décris ton style de flirt comme s'il s'agissait d'un plat de restaurant.",
-          "Propose un jeu de séduction léger où chacun peut choisir de passer.",
-          "Choisis : raconter une anecdote mignonne ou passer sans justification."
+          "Envoie une photo de ton visage en train de jouir de l'instant.",
+          "Prends en photo l'endroit de ton corps qu'on a le plus envie de toucher.",
+          "Montre ta meilleure pose coquine, photo à l'appui.",
+          "Fais-toi une photo en train de t'embrasser toi-même.",
+          "Envoie une photo de ton regard le plus séduisant et excitant.",
+          "Prends en photo ton sourire coquin le plus compromettant.",
+          "Photo de ta tenue la plus sexy, sans fard ni faux-semblants.",
+          "Montre la partie de ta peau que tu voudrais qu'on couvre de baisers.",
+          "Prends une photo de toi en train de te caresser doucement.",
+          "Envoie une preuve photo de ton plus beau geste de séduction.",
+          "Fais une photo de ton corps entier dans ta pose la plus brûlante.",
+          "Montre en photo ce qui te rend déjà mouillé·e / excité·e.",
+          "Capture ton expression la plus lubrique, sans langue cette fois.",
+          "Prends en photo l'endroit que tu mordillerais volontiers.",
+          "Envoyez une photo de vous deux en train de vous désirer.",
+          "Photo-preuve de ton délice : montre ton visage après le plaisir.",
+          "Photographie tes lèvres et ce que tu aimerais leur faire subir.",
+          "Prends en photo ta main posée là où ça te plaît d'être touché·e.",
+          "Envoie un cliché de tes fesses ou de ton dos nu, selon ton audace.",
+          "Fais une photo de ton regard de biche en pleine envie."
         ],
         adultQcm: [
-          { question: "Pour un rendez-vous idéal, tu préfères…", options: ["Une promenade au coucher du soleil", "Un dîner fait maison", "Une sortie surprise", "Une conversation qui dure"] },
-          { question: "Qu'est-ce qui te charme d'abord ?", options: ["Le regard", "L'humour", "La voix", "L'attention"] },
-          { question: "Quel message te ferait sourire ?", options: ["« J'ai pensé à toi »", "Une blague bien trouvée", "Une invitation spontanée", "Une chanson partagée"] },
-          { question: "Quelle ambiance pour un premier rendez-vous ?", options: ["Café tranquille", "Balade en ville", "Petit concert", "Pique-nique improvisé"] },
-          { question: "Quel geste est le plus romantique ?", options: ["Se souvenir d'un détail", "Écrire une lettre", "Préparer une surprise", "Être vraiment à l'écoute"] }
-        ]
+          { question: "Pour une nuit torride, tu choisis…", options: ["Une longue prélude orale", "Des positions variées", "Des jouets et accessoires", "Un jeu de séduction avant"] },
+          { question: "Ton endroit érogène préféré…", options: ["Le cou et la nuque", "Les seins / tétons", "L'intérieur des cuisses", "Le bas du ventre"] },
+          { question: "Le meilleur moment pour toi…", options: ["Au lever du jour", "En pleine nuit", "Un après-midi paresseux", "Avant de sortir"] },
+          { question: "Ta vitesse idéale…", options: ["Lent et profond", "Rapide et frénétique", "Alterné, comme une marée", "Selon l'humeur"] },
+          { question: "Ce qui te fait craquer…", options: ["Une main qui s'égare", "Une langue experte", "Un souffle dans le cou", "Un regard qui dévore"] },
+          { question: "Après l'orgasme…", options: ["On se câline longuement", "On recommence", "On reste en silence", "On part se doucher ensemble"] },
+          { question: "Tes fantasmes à deux…", options: ["Un club libertin", "Une vidéo maison", "Une nuit sans limite", "Un jeu d'interdits"] },
+          { question: "Ce que tu veux qu'on te fasse…", options: ["Te ligoter doucement", "Te mordiller les seins / tétons", "Te lécher lentement", "Te prendre sans prévenir"] }
+        ],
       };
 
       const ACCESS_CODE = "6969";
@@ -1149,7 +1113,7 @@
       let customQuestions = loadArray("customQuestions", []);
       customQuestions = customQuestions.filter(item =>
         item && typeof item.text === "string" && typeof item.category === "string" &&
-        ["truth", "action", "consequence"].includes(item.category)
+        ["truth", "action"].includes(item.category)
       ).map(item => ({ text: item.text.trim().slice(0, 220), category: item.category })).filter(item => item.text);
       let adultUnlocked = false;
       let activeSurface = "game";
@@ -1295,8 +1259,24 @@
       }
 
       function adultPoolFor(category) {
-        const adultCategory = category === "truth" ? "adultTruth" : category === "action" ? "adultAction" : "adultConsequence";
+        if (category === "qcm") {
+          return questions.adultQcm.map(entry => entry.question);
+        }
+        const adultCategory = category === "truth" ? "adultTruth" : "adultAction";
         return [...questions[adultCategory], ...customQuestions.filter(item => item.category === category).map(item => item.text)];
+      }
+
+      function pickFromPool(pool, key) {
+        if (!pool.length) return null;
+        let used = usedQuestions.get(key);
+        if (!used || used.size >= pool.length) {
+          used = new Set();
+          usedQuestions.set(key, used);
+        }
+        const available = pool.map((_, index) => index).filter(index => !used.has(index));
+        const index = available[Math.floor(Math.random() * available.length)];
+        used.add(index);
+        return pool[index];
       }
 
       function drawQuestion(category) {
@@ -1335,13 +1315,18 @@
         }
         const choices = mode === "av"
           ? [{ label: "Action", category: "action" }, { label: "Vérité", category: "truth" }]
-          : [{ label: "Vérité", category: "truth" }, { label: "Conséquence", category: "consequence" }];
+          : [{ label: "Vérité", category: "truth" }, { label: "Choix multiple", category: "qcm" }];
         choices.forEach(choice => {
           const button = document.createElement("button");
           button.type = "button";
           button.className = "choice-button";
           button.textContent = choice.label;
           button.addEventListener("click", () => {
+            if (choice.category === "qcm") {
+              const entry = pickFromPool(questions.qcm, "soft-qcm");
+              drawPromptCard(entry.question, "Choix multiple", "game", entry.options);
+              return;
+            }
             drawPromptCard(drawQuestion(choice.category), choice.label, "game");
           });
           choiceGrid.append(button);
@@ -1383,7 +1368,7 @@
         return article;
       }
 
-      function drawPromptCard(question, label, surface = activeSurface) {
+      function drawPromptCard(question, label, surface = activeSurface, options = []) {
         if (players.length < MIN_PLAYERS) {
           const notice = surface === "adult" ? $("#adultNotice") : setupNotice;
           notice.textContent = "Ajoutez au moins deux joueurs avant de poser une question.";
@@ -1407,35 +1392,94 @@
         } else {
           $("#turnHint").textContent = "Réponds pour passer au joueur suivant. Tu peux aussi passer cette carte.";
         }
+        const hasOptions = Array.isArray(options) && options.length > 0;
+        const photoAction = label === "Action sensuelle";
+        let chosenIndex = null;
+        let photoData = "";
+
+        if (hasOptions) {
+          const answers = document.createElement("div");
+          answers.className = "answers";
+          options.forEach((option, index) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "answer-button";
+            const text = document.createElement("span");
+            text.textContent = option;
+            button.append(text);
+            button.addEventListener("click", () => {
+              chosenIndex = index;
+              [...answers.children].forEach((item, itemIndex) => item.classList.toggle("selected", itemIndex === index));
+              refreshValidate();
+            });
+            answers.append(button);
+          });
+          stage.append(answers);
+        }
+
         const responseBox = document.createElement("div");
         responseBox.className = "response-box";
         const responseLabel = document.createElement("label");
-        responseLabel.textContent = label === "Action" || label === "Conséquence"
+        responseLabel.textContent = label === "Action" || photoAction
           ? "Ta réponse ou comment tu relèves le défi"
           : "Ta réponse";
-        const response = document.createElement("textarea");
-        response.maxLength = 500;
-        response.placeholder = "Écris ta réponse ici…";
-        response.setAttribute("aria-label", "Ta réponse à la question");
         const note = document.createElement("p");
         note.className = "response-note";
-        note.textContent = "Ta réponse n'est pas enregistrée et reste sur cet appareil pendant la partie.";
-        responseBox.append(responseLabel, response, note);
+        note.textContent = photoAction
+          ? "La photo est facultative : elle reste sur cet appareil et n'est jamais enregistrée."
+          : "Ta réponse n'est pas enregistrée et reste sur cet appareil pendant la partie.";
+        responseBox.append(responseLabel);
+        let response = null;
+        if (!hasOptions) {
+          response = document.createElement("textarea");
+          response.maxLength = 500;
+          response.placeholder = photoAction ? "Écris ta réponse ou ajoute une photo…" : "Écris ta réponse ici…";
+          response.setAttribute("aria-label", "Ta réponse à la question");
+          responseBox.append(response);
+        }
+        responseBox.append(note);
+
+        if (photoAction) {
+          const photoRow = document.createElement("div");
+          photoRow.className = "photo-row";
+          const photoButton = document.createElement("button");
+          photoButton.type = "button";
+          photoButton.className = "subtle-button";
+          photoButton.textContent = "📷 Preuve photo (facultative)";
+          const photoThumb = document.createElement("img");
+          photoThumb.className = "photo-thumb";
+          photoThumb.alt = "Preuve photo choisie";
+          photoThumb.hidden = true;
+          photoButton.addEventListener("click", () => {
+            openPhotoModal(data => {
+              photoData = data;
+              photoThumb.src = data;
+              photoThumb.hidden = false;
+              photoButton.textContent = "📷 Changer la photo";
+              refreshValidate();
+            });
+          });
+          photoRow.append(photoButton, photoThumb);
+          responseBox.append(photoRow);
+        }
+
         const actions = document.createElement("div");
         actions.className = "card-actions";
         const validate = makeButton("✔ Valider", "gold-button", () => {
-          if (!response.value.trim()) {
-            response.focus();
+          if (!photoData && !chosenIndex && !(response && response.value.trim())) {
+            if (response) response.focus();
             return;
           }
           answersGiven++;
           updateQuestionProgress();
           nextTurn();
         });
+        function refreshValidate() {
+          const filled = Boolean(chosenIndex !== null || photoData || (response && response.value.trim()));
+          validate.disabled = !filled;
+        }
+        if (response) response.addEventListener("input", refreshValidate);
         validate.disabled = true;
-        response.addEventListener("input", () => {
-          validate.disabled = !response.value.trim();
-        });
         actions.append(
           makeButton("⏭ Passer", "subtle-button", skipCard),
           validate
@@ -1659,7 +1703,12 @@
           input.focus();
           return;
         }
-        const item = { text: text.slice(0, 220), category: $("#adultCategory").value };
+        const category = $("#adultCategory").value;
+        if (category === "qcm") {
+          $("#adultNotice").textContent = "Le choix multiple pioche dans les questions intégrées du jeu sensuel.";
+          return;
+        }
+        const item = { text: text.slice(0, 220), category };
         customQuestions.push(item);
         if (saveArray("customQuestions", customQuestions)) {
           input.value = "";
@@ -1687,13 +1736,22 @@
       function askAdultQuestion() {
         if (!adultUnlocked) return;
         const category = $("#adultCategory").value;
-        const pool = adultPoolFor(category);
         const index = Number($("#adultPromptSelect").value);
+        const label = category === "truth" ? "Vérité chaude" : category === "action" ? "Action sensuelle" : "Choix multiple";
+        if (category === "qcm") {
+          const entry = questions.adultQcm[index];
+          if (!entry) {
+            $("#adultNotice").textContent = "Choisis une question valide dans la liste.";
+            return;
+          }
+          drawPromptCard(entry.question, label, "adult", entry.options);
+          return;
+        }
+        const pool = adultPoolFor(category);
         if (!pool[index]) {
           $("#adultNotice").textContent = "Choisis une question valide dans la liste.";
           return;
         }
-        const label = category === "truth" ? "Vérité chaude" : category === "action" ? "Action sensuelle" : "Conséquence";
         drawPromptCard(pool[index], label, "adult");
       }
 
@@ -1801,6 +1859,156 @@
       document.addEventListener("keydown", event => {
         if (event.key === "Escape") codeModal.classList.remove("visible");
       });
+
+      // --- Preuve photo : caméra directe ou import, jamais enregistrée sur disque.
+      const photoModal = $("#photoModal");
+      const photoVideo = $("#photoVideo");
+      const photoPreview = $("#photoPreview");
+      const photoCanvas = $("#photoCanvas");
+      const photoNotice = $("#photoNotice");
+      const photoShoot = $("#photoShoot");
+      const photoImport = $("#photoImport");
+      const photoRetake = $("#photoRetake");
+      const photoConfirm = $("#photoConfirm");
+      const photoFile = $("#photoFile");
+      let photoStream = null;
+      let photoData = "";
+      let photoCallback = null;
+
+      function stopPhotoStream() {
+        if (!photoStream) return;
+        photoStream.getTracks().forEach(track => track.stop());
+        photoStream = null;
+      }
+
+      function resetPhotoModal() {
+        photoData = "";
+        photoNotice.textContent = "";
+        photoVideo.hidden = true;
+        photoPreview.hidden = true;
+        photoShoot.hidden = true;
+        photoRetake.hidden = true;
+        photoConfirm.hidden = true;
+        photoImport.hidden = false;
+        photoFile.value = "";
+      }
+
+      function closePhotoModal() {
+        stopPhotoStream();
+        photoModal.classList.remove("visible");
+        photoCallback = null;
+      }
+
+      function showPhotoPreview(data) {
+        stopPhotoStream();
+        photoData = data;
+        photoPreview.src = data;
+        photoPreview.hidden = false;
+        photoVideo.hidden = true;
+        photoShoot.hidden = true;
+        photoRetake.hidden = false;
+        photoConfirm.hidden = false;
+        photoNotice.textContent = "La photo partira dans la salle si tu valides.";
+      }
+
+      function photoFrom(source, width, height) {
+        let data = "";
+        const qualities = [0.72, 0.6, 0.5, 0.4];
+        // On réduit jusqu'à passer sous la taille acceptée par le serveur.
+        sizing: for (const ratio of [1, 0.8, 0.65]) {
+          const maxSide = Math.round(1100 * ratio);
+          const scale = Math.min(1, maxSide / Math.max(width, height));
+          photoCanvas.width = Math.max(1, Math.round(width * scale));
+          photoCanvas.height = Math.max(1, Math.round(height * scale));
+          const context = photoCanvas.getContext("2d");
+          context.drawImage(source, 0, 0, photoCanvas.width, photoCanvas.height);
+          for (const quality of qualities) {
+            data = photoCanvas.toDataURL("image/jpeg", quality);
+            if (data.length <= 360000) break sizing;
+          }
+        }
+        showPhotoPreview(data);
+      }
+
+      async function startPhotoCamera() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          photoNotice.textContent = "Caméra indisponible ici : importe une photo de l'appareil.";
+          return;
+        }
+        try {
+          photoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment", width: { ideal: 1280 } },
+            audio: false
+          });
+          // Une photo déjà choisie (import) reste affichée.
+          if (photoData) {
+            stopPhotoStream();
+            return;
+          }
+          photoVideo.srcObject = photoStream;
+          photoVideo.hidden = false;
+          photoPreview.hidden = true;
+          photoShoot.hidden = false;
+          photoRetake.hidden = true;
+          photoConfirm.hidden = true;
+          photoNotice.textContent = "Cadre la scène, puis appuie sur 📸.";
+        } catch (error) {
+          if (photoData) return;
+          photoNotice.textContent = "Caméra refusée : importe une photo de l'appareil.";
+        }
+      }
+
+      function openPhotoModal(callback) {
+        photoCallback = typeof callback === "function" ? callback : null;
+        resetPhotoModal();
+        photoModal.classList.add("visible");
+        startPhotoCamera();
+      }
+
+      photoShoot.addEventListener("click", () => {
+        if (!photoStream || !photoVideo.videoWidth) {
+          photoNotice.textContent = "La caméra n'est pas encore prête.";
+          return;
+        }
+        photoFrom(photoVideo, photoVideo.videoWidth, photoVideo.videoHeight);
+      });
+      photoRetake.addEventListener("click", () => {
+        photoData = "";
+        photoPreview.hidden = true;
+        photoRetake.hidden = true;
+        photoConfirm.hidden = true;
+        startPhotoCamera();
+      });
+      photoImport.addEventListener("click", () => photoFile.click());
+      photoFile.addEventListener("change", () => {
+        const file = photoFile.files && photoFile.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+          const image = new Image();
+          image.addEventListener("load", () => photoFrom(image, image.naturalWidth, image.naturalHeight));
+          image.addEventListener("error", () => {
+            photoNotice.textContent = "Cette image n'a pas pu être lue.";
+          });
+          image.src = reader.result;
+        });
+        reader.readAsDataURL(file);
+      });
+      photoConfirm.addEventListener("click", () => {
+        if (!photoData) return;
+        const callback = photoCallback;
+        closePhotoModal();
+        if (callback) callback(photoData);
+      });
+      photoCancel.addEventListener("click", closePhotoModal);
+      photoModal.addEventListener("click", event => {
+        if (event.target === photoModal) closePhotoModal();
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && photoModal.classList.contains("visible")) closePhotoModal();
+      });
+      // Partagé avec le bloc du jeu en ligne.
+      window.entreNousPhoto = openPhotoModal;
       $("#modeGrid").addEventListener("click", event => {
         const button = event.target.closest("[data-mode]");
         if (button) chooseMode(button.dataset.mode);
@@ -1882,40 +2090,48 @@
         ],
         adult: {
           truth: [
-            "Quel fantasme romantique ou sensuel gardes-tu d'habitude pour toi ? Tu peux rester vague.",
-            "Décris ton idéal de rendez-vous sensuel en une phrase.",
-            "Quel geste tendre te fait te sentir particulièrement désiré·e ?",
-            "À quel moment as-tu eu la plus belle étincelle avec quelqu'un ?",
-            "Quelle musique te met tout de suite dans une ambiance sensuelle ?",
-            "Quelle est la plus jolie chose qu'on t'ait jamais dite pour te séduire ?",
-            "Tu préfères un baiser lent ou un regard insistant ? Explique en un mot.",
-            "Quel parfum ou quelle odeur te fait fondre ?",
-            "Quelle partie du corps d'une personne te fait le plus craquer ?",
-            "Raconte un moment où tu as joué à séduire sans rien dire."
+            "Décris ton fantasme le plus brûlant — jusque dans les détails.",
+            "Quel endroit de ton corps aime-t-on te caresser pour te faire fondre ?",
+            "Raconte ta nuit la plus excitante, sans pruderie.",
+            "Qu'est-ce qui te fait jouir le plus vite : les mains, la bouche ou les mots ?",
+            "Quel type de baiser te fait perdre la tête à chaque fois ?",
+            "Décris la chose la plus osée que tu aies faite au lit.",
+            "Tu préfères qu'on te domine ou qu'on te laisse guider ? Explique.",
+            "Quelle partie de ton corps te rend folle quand on l'embrasse ?",
+            "Raconte un rêve érotique que tu as vraiment eu.",
+            "Qu'est-ce qui te met le plus en érection / en excitation tout de suite ?",
+            "Cite ta position préférée et pourquoi elle te rend dingue.",
+            "Quel message coquin aimerais-tu recevoir maintenant ?",
+            "Tu aimes les caresses douces ou les gestes plus durs ? Précise.",
+            "Décris exactement ce que tu aimerais qu'on te fasse ce soir.",
+            "Quel parfum / quelle odeur te rend immédiatement excité·e ?",
+            "Quelle fantaisie intime n'as-tu jamais osé avouer à personne ?"
           ],
           action: [
-            "Fais un compliment séduisant à une personne qui est d'accord pour le recevoir.",
-            "Décris avec délicatesse ton idée d'un rendez-vous romantique.",
-            "Choisis une chanson qui évoque la séduction et explique ton choix.",
-            "Regarde la personne de ton choix dans les yeux pendant quinze secondes.",
-            "Fais deviner le parfum de la personne en face avec un seul geste.",
-            "Choisis un message doux et provocant à glisser dans le téléphone du joueur de ton choix, si elle ou il est d'accord.",
-            "Suggère une danse lente en expliquant pourquoi ce serait parfait.",
-            "Fais un compliment à la personne la plus proche de toi.",
-            "Fais le clin d'œil le plus efficace que tu connaisses.",
-            "Choisis une personne et dis-lui en deux mots ce qui te trouble chez elle."
+            "Envoie une photo de ton visage en train de jouir de l'instant.",
+            "Prends en photo l'endroit de ton corps qu'on a le plus envie de toucher.",
+            "Montre ta meilleure pose coquine, photo à l'appui.",
+            "Fais-toi une photo en train de t'embrasser toi-même.",
+            "Envoie une photo de ton regard le plus séduisant et excitant.",
+            "Prends en photo ton sourire coquin le plus compromettant.",
+            "Photo de ta tenue la plus sexy, sans fard ni faux-semblants.",
+            "Montre la partie de ta peau que tu voudrais qu'on couvre de baisers.",
+            "Prends une photo de toi en train de te caresser doucement.",
+            "Envoie une preuve photo de ton plus beau geste de séduction.",
+            "Fais une photo de ton corps entier dans ta pose la plus brûlante.",
+            "Montre en photo ce qui te rend déjà mouillé·e / excité·e.",
+            "Capture ton expression la plus lubrique, sans langue cette fois.",
+            "Prends en photo ton odeur préférée (parfum, peau, draps…).",
+            "Envoyez une photo de vous deux en train de vous desire(r).",
+            "Photo-preuve de ton délice : montre ton visage après le plaisir."
           ],
-          consequence: [
-            "Raconte un moment où tu t'es senti·e particulièrement séduisant·e.",
-            "Décris un geste romantique que tu aimerais recevoir.",
-            "Fais un toast à la personne qui t'a le plus fait sourire ce soir.",
-            "Laisse la personne à ta droite choisir une chanson douce pour la suite.",
-            "Raconte ton meilleur rendez-vous en trente secondes.",
-            "Propose une courte séance de massage des épaules à la personne de ton choix, si elle est d'accord.",
-            "Raconte la plus belle séduction que tu aies vue autour de toi ce soir.",
-            "Envoie une pensée tendre à la personne de ton choix.",
-            "Raconte un détail que tu as remarqué chez quelqu'un ce soir.",
-            "Si tu devais séduire cette soirée en un geste, ce serait lequel ?"
+          qcm: [
+            { question: "Pour une nuit torride, tu choisis…", options: ["Une longue prélude orale", "Des positions variées", "Des jouets et accessoires", "Un jeu de séduction avant"] },
+            { question: "Ton erogène préféré…", options: ["Le cou et la nuque", "Les seins / tétons", "L'intérieur des cuisses", "Le bas du ventre"] },
+            { question: "Le meilleur moment pour toi…", options: ["Le lever du jour", "En pleine nuit", "Un après-midi paresseux", "Avant de sortir"] },
+            { question: "Ta vitesse idéale…", options: ["Lent et profond", "Rapide et frénétique", "Alterné, comme une marée", "Selon l'humeur"] },
+            { question: "Ce qui te fait craquer…", options: ["Une main qui s'égare", "Une langue experte", "Un souffle dans le cou", "Un regard qui dévore"] },
+            { question: "Après l'orgasme…", options: ["On se câline longuement", "On recommence", "On reste en silence", "On part se doucher ensemble"] }
           ]
         }
       };
@@ -1945,6 +2161,11 @@
       let copyFeedbackTimer = 0;
       let selectedTargetId = "";
       let resumeQueue = [];
+      // --- Invitation par lien ---
+      let roomInvite = "";            // Lien d'invitation envoyé par le serveur
+      let inviteCode = "";            // Code lu dans ?room= à l'ouverture de la page
+      let inviteKindRetried = false;  // Un seul essai avec l'autre type de salle
+      let inviteFeedbackTimer = 0;    // Temporisation du message « Lien copié ! »
 
       // L'identité de secours reste dans le navigateur pour retrouver sa place,
       // mais seul le bouton « Reprendre la salle » la réutilise : un nouvel onglet
@@ -2209,10 +2430,26 @@
           joinMode = "join";
           reconnectAttempts = 0;
           roomClosed = false;
+          // Lien d'invitation fourni par le serveur (repli : domaine de cette page).
+          roomInvite = typeof message.invite === "string" && message.invite
+            ? message.invite
+            : `${location.origin}/?room=${room.code}`;
+          if (inviteCode && inviteCode === room.code) {
+            inviteCode = "";
+            inviteKindRetried = false;
+            // On nettoie l'adresse : un rafraîchissement ne rejoue pas la jointure.
+            try {
+              history.replaceState(null, "", `${location.pathname}${location.hash}`);
+            } catch (error) {
+              /* historique indisponible */
+            }
+          }
           saveIdentity(room.code, playerId);
           const me = room.players.find(player => player.id === playerId);
           saveLastRoom(room.code, playerId, me ? me.name : "", Boolean(me && me.host), roomKind);
           entryNotice().textContent = "";
+          // On efface aussi le message de l'accueil classique (jointure par lien).
+          roomNotice.textContent = "";
           renderRoom();
         }
       }
@@ -2264,6 +2501,15 @@
           currentCode = "";
           resetOnlineUi();
           goHome(`${message} Demandez un nouveau code à l'hôte.`);
+          return;
+        }
+        // Un lien d'invitation ne précise pas le type de salle : on réessaie une fois
+        // avec l'autre type (soirée classique ↔ jeu sensuel 18+).
+        if (message.startsWith("Ce code correspond à") && inviteCode && !inviteKindRetried) {
+          inviteKindRetried = true;
+          roomKind = roomKind === "sensual" ? "classic" : "sensual";
+          roomNotice.textContent = `Tu rejoins la salle ${inviteCode}…`;
+          retryOpen(250);
           return;
         }
         // Un code n'ouvre qu'un type de salle : la soirée classique ou le jeu sensuel.
@@ -2358,6 +2604,12 @@
         $net("#onlinePlayers").replaceChildren();
         $net("#onlineCard").replaceChildren();
         $net("#onlineRoomCode").textContent = "------";
+        // Le lien d'invitation est propre à chaque salle : on l'efface en quittant.
+        roomInvite = "";
+        window.clearTimeout(inviteFeedbackTimer);
+        $net("#onlineInviteLink").textContent = "";
+        $net("#onlineInviteLink").hidden = true;
+        $net("#onlineInviteNote").hidden = true;
         $net("#onlineRoomTitle").textContent = "Salle · ------";
         $net("#onlineActiveName").textContent = "";
         $net("#onlineTurnHint").textContent = "";
@@ -2404,6 +2656,11 @@
           roomCodeElement.textContent = room.code;
           $net("#onlineCopyCode").textContent = "📋 Copier";
         }
+        // Lien d'invitation affiché en clair (petit texte sélectionnable) pour copier à la main.
+        const inviteElement = $net("#onlineInviteLink");
+        inviteElement.textContent = roomInvite || `${location.origin}/?room=${room.code}`;
+        inviteElement.hidden = false;
+        $net("#onlineInviteNote").hidden = true;
         const nameInput = $net("#onlineName");
         if (myPlayer && document.activeElement !== nameInput) nameInput.value = myPlayer.name;
         $net("#onlineNameForm").querySelector("button").disabled = !myPlayer;
@@ -2446,7 +2703,7 @@
         setHidden("#onlineSensualModes", !sensual);
         $net("#onlineAskNote").textContent = sensual
           ? "Choisissez une catégorie : le jeu propose une question sensuelle, que vous pouvez ajuster ou remplacer."
-          : "Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.";
+          : "Choisissez un mode : le jeu propose une question, que vous pouvez ajuster ou remplacer avec 🔄 Autre proposition.";
         setHidden("#onlineDebug", !debugVisible);
         $net("#onlineDebug").classList.toggle("visible", debugVisible);
 
@@ -2538,7 +2795,7 @@
       function categoryLabel(category) {
         if (category === "truth") return "Vérité chaude";
         if (category === "action") return "Action sensuelle";
-        if (category === "consequence") return "Conséquence";
+        if (category === "qcm") return "Choix multiple";
         return "Jeu sensuel";
       }
 
@@ -2589,22 +2846,59 @@
 
         if (!question.answered) {
           if (!question.options.length && isTarget) {
+            const wantsPhoto = question.mode === "adult" && question.category === "action";
             const form = document.createElement("form");
             form.className = "response-box";
             const label = document.createElement("label");
-            label.textContent = "Votre réponse";
+            label.textContent = wantsPhoto ? "Votre réponse ou votre preuve photo" : "Votre réponse";
             const textarea = document.createElement("textarea");
             textarea.maxLength = 500;
-            textarea.placeholder = "Écrivez votre réponse…";
+            textarea.placeholder = wantsPhoto ? "Écrivez votre réponse ou ajoutez une photo…" : "Écrivez votre réponse…";
             textarea.setAttribute("aria-label", "Votre réponse");
             const submit = document.createElement("button");
             submit.type = "submit";
             submit.className = "gold-button";
             submit.textContent = "✔ Envoyer";
-            form.append(label, textarea, submit);
+            form.append(label, textarea);
+            let attachedPhoto = "";
+            if (wantsPhoto) {
+              const photoRow = document.createElement("div");
+              photoRow.className = "photo-row";
+              const photoButton = document.createElement("button");
+              photoButton.type = "button";
+              photoButton.className = "subtle-button";
+              photoButton.textContent = "📷 Preuve photo (facultative)";
+              const photoThumb = document.createElement("img");
+              photoThumb.className = "photo-thumb";
+              photoThumb.alt = "Preuve photo choisie";
+              photoThumb.hidden = true;
+              photoButton.addEventListener("click", () => {
+                window.entreNousPhoto(data => {
+                  attachedPhoto = data;
+                  photoThumb.src = data;
+                  photoThumb.hidden = false;
+                  photoButton.textContent = "📷 Changer la photo";
+                  submit.disabled = !textarea.value.trim() && !attachedPhoto;
+                });
+              });
+              photoRow.append(photoButton, photoThumb);
+              form.append(photoRow);
+            }
+            const hint = document.createElement("p");
+            hint.className = "response-note";
+            hint.textContent = wantsPhoto
+              ? "La photo est facultative et n'est jamais enregistrée sur le serveur."
+              : "Votre réponse n'est pas enregistrée : elle sert uniquement à cette question.";
+            form.append(hint, submit);
+            const refreshSubmit = () => {
+              submit.disabled = !textarea.value.trim() && !attachedPhoto;
+            };
+            submit.disabled = true;
+            textarea.addEventListener("input", refreshSubmit);
             form.addEventListener("submit", event => {
               event.preventDefault();
-              send("answer", { text: textarea.value });
+              if (submit.disabled) return;
+              send("answer", { text: textarea.value.trim(), image: attachedPhoto });
             });
             stage.append(form);
             textarea.focus();
@@ -2621,9 +2915,18 @@
           const answer = document.createElement("p");
           answer.className = "answer-banner";
           const author = document.createElement("strong");
-          author.textContent = `${question.targetName} répond : `;
+          author.textContent = question.answer
+            ? `${question.targetName} répond : `
+            : `${question.targetName} envoie sa preuve photo : `;
           answer.append(author, document.createTextNode(question.answer));
           stage.append(answer);
+          if (question.image) {
+            const proof = document.createElement("img");
+            proof.className = "proof-photo";
+            proof.src = question.image;
+            proof.alt = `Preuve photo de ${question.targetName}`;
+            stage.append(proof);
+          }
         }
 
         if (isAsker) {
@@ -2685,6 +2988,10 @@
         }
         if (mode === "adult") {
           // Questions intégrées du jeu sensuel : rien n'est enregistré sur le serveur.
+          if (category === "qcm") {
+            const entry = onlinePrompts.adult.qcm[Math.floor(Math.random() * onlinePrompts.adult.qcm.length)];
+            return { text: entry.question, options: [...entry.options] };
+          }
           const pool = onlinePrompts.adult[category] || [];
           return { text: pool.length ? pool[Math.floor(Math.random() * pool.length)] : "", options: [] };
         }
@@ -2715,7 +3022,7 @@
             $net("#onlineNotice").textContent = "Le jeu sensuel est une salle à part : rejoignez-le depuis l'accueil 18+.";
             return;
           }
-          if (!["truth", "action", "consequence"].includes(category)) {
+          if (!["truth", "action", "qcm"].includes(category)) {
             $net("#onlineNotice").textContent = "Choisissez une catégorie de question sensuelle.";
             return;
           }
@@ -2750,21 +3057,6 @@
         });
         setHidden("#onlineDraftAgain", !["truth", "action", "qcm", "wouldYouRather", "adult"].includes(draft.mode));
         if (focus) textarea.focus();
-      }
-
-      function writeOwnQuestion() {
-        if (!room || !activeTurn() || room.game.question) {
-          if (room) $net("#onlineNotice").textContent = "Vous ne pouvez pas écrire de question maintenant.";
-          return;
-        }
-        if (!validTarget()) {
-          $net("#onlineNotice").textContent = "Choisissez d'abord la personne à interroger.";
-          return;
-        }
-        const keepMode = draft && ["truth", "action", "adult"].includes(draft.mode) ? draft.mode : "custom";
-        draft = { mode: keepMode, category: keepMode === "adult" ? draft.category : "", text: "", options: [] };
-        renderDraft(true);
-        $net("#onlineDraft").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
       function sendDraft() {
@@ -2840,8 +3132,6 @@
       $net("#onlineDraftAgain").addEventListener("click", () => {
         if (draft) proposeMode(draft.mode, draft.category);
       });
-      $net("#onlineDraftCustom").addEventListener("click", writeOwnQuestion);
-      $net("#onlineWriteOwn").addEventListener("click", writeOwnQuestion);
       $net("#onlineNameForm").addEventListener("submit", event => {
         event.preventDefault();
         if (!room) return;
@@ -2903,6 +3193,63 @@
         }, 2000);
       }
       $net("#onlineCopyCode").addEventListener("click", copyRoomCode);
+
+      // --- Invitation par lien : partage natif du téléphone, sinon copie simple.
+      function currentInviteLink() {
+        if (roomInvite) return roomInvite;
+        return room ? `${location.origin}/?room=${room.code}` : "";
+      }
+
+      function showInviteFeedback(message) {
+        const note = $net("#onlineInviteNote");
+        note.textContent = message;
+        note.hidden = false;
+        window.clearTimeout(inviteFeedbackTimer);
+        inviteFeedbackTimer = window.setTimeout(() => {
+          note.hidden = true;
+        }, 2600);
+      }
+
+      async function shareInvite() {
+        const link = currentInviteLink();
+        const button = $net("#onlineInvite");
+        if (!link) {
+          showInviteFeedback("Lien d'invitation indisponible pour l'instant.");
+          return;
+        }
+        const message = `Rejoins-moi sur Entre Nous : ${link}`;
+        // 1) Partage natif (WhatsApp, SMS, e-mail…) quand le navigateur le propose.
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: "Entre Nous", text: message, url: link });
+            return;
+          } catch (error) {
+            if (error && error.name === "AbortError") return; // partage annulé par le joueur
+          }
+        }
+        // 2) Repli : copie du lien dans le presse-papiers.
+        let copied = false;
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(message);
+            copied = true;
+          }
+        } catch (error) {
+          copied = false;
+        }
+        if (!copied) copied = fallbackCopyText(message);
+        if (copied) {
+          showInviteFeedback("Lien copié !");
+          const original = button.textContent;
+          button.textContent = "Lien copié ✓";
+          window.setTimeout(() => {
+            if (button.textContent === "Lien copié ✓") button.textContent = original;
+          }, 2000);
+        } else {
+          showInviteFeedback("Copie impossible : sélectionnez le lien ci-dessus.");
+        }
+      }
+      $net("#onlineInvite").addEventListener("click", shareInvite);
       $net("#onlineLeave").addEventListener("click", () => {
         const isHost = Boolean(room && room.players.some(player => player.id === playerId && player.host));
         if (isHost && !window.confirm("En quittant, vous fermez la salle pour tout le monde. Continuer ?")) return;
@@ -2961,6 +3308,28 @@
           $net("#onlineDebug").classList.toggle("visible", debugVisible);
         }
       }, true);
+
+      // --- Lien d'invitation : ?room=123456 rejoint la salle sans saisie manuelle.
+      function readInviteCode() {
+        try {
+          const value = new URLSearchParams(location.search).get("room");
+          const code = typeof value === "string" ? value.trim() : "";
+          return /^\d{6}$/.test(code) ? code : "";
+        } catch (error) {
+          return "";
+        }
+      }
+
+      inviteCode = readInviteCode();
+      if (inviteCode) {
+        // On pré-remplit le code sur les deux accueils, puis la jointure part toute seule :
+        // aucune saisie n'est nécessaire (le serveur attribue un nom par défaut,
+        // modifiable ensuite dans la salle avec « Votre nom »).
+        roomCodeInput.value = inviteCode;
+        $net("#sensualRoomCode").value = inviteCode;
+        startOnline(inviteCode, "join", "classic");
+        roomNotice.textContent = `Tu rejoins la salle ${inviteCode}…`;
+      }
 
       updateResumeButton("classic");
       updateResumeButton("sensual");
