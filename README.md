@@ -27,7 +27,7 @@ Ne lancez pas le fichier par double-clic (`file://`) pour le multijoueur. Le jeu
 2. L'hôte partage le code à 6 chiffres affiché en grand sur la page de la salle, avec le bouton **Copier le code**. Le code reste le même tant que la salle existe.
 3. Chaque autre joueur entre uniquement le code avec **Rejoindre la salle**, puis choisit son nom dans la salle. Chaque appareil ou onglet représente un joueur distinct : un nouvel onglet qui saisit le code entre comme nouveau joueur.
 4. L'hôte lance la partie dès que deux joueurs ou plus sont présents.
-5. Le joueur dont c'est le tour choisit une personne dans **À qui posez-vous la question ?**, puis un mode (Vérité, Action, Choix multiple, Tu préfères, 18+). Le jeu propose une question dans une zone modifiable : on peut l'ajuster, demander **Autre proposition**, ou cliquer sur **Écrire ma propre question** pour la remplacer directement. **Poser cette question** l'envoie.
+5. Le joueur dont c'est le tour choisit une personne dans **À qui posez-vous la question ?**, puis un mode (Vérité, Action, Choix multiple, Tu préfères). Le jeu propose une question dans une zone modifiable : on peut l'ajuster, demander **Autre proposition**, ou cliquer sur **Écrire ma propre question** pour la remplacer directement. **Poser cette question** l'envoie.
 6. La question s'affiche sur tous les appareils. Seule la personne interrogée peut répondre ; sa réponse apparaît automatiquement chez tout le monde, sans bouton « Révéler ».
 7. Le poseur peut interroger plusieurs personnes à la suite avec **Interroger quelqu'un d'autre**, puis **Passer la main** pour laisser le tour au joueur suivant. Ctrl+Maj+D affiche le menu debug caché.
 

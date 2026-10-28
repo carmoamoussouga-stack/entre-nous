@@ -23,10 +23,13 @@ function loadRooms() {
   if (!Array.isArray(saved)) throw new Error("Le fichier data/rooms.json doit contenir une liste.");
   for (const room of saved) {
     if (!/^\d{6}$/.test(room.code) || !Array.isArray(room.players) || !room.game) continue;
+    room.kind = room.kind === "sensual" ? "sensual" : "classic";
     room.players = room.players.map(player => ({ ...player, online: false }));
     room.connections = new Map();
     room.customQuestions = Array.isArray(room.customQuestions) ? room.customQuestions : [];
     room.game.votes = [];
+    // Le jeu sensuel est une salle à part : il n'a jamais de verrou 18+.
+    room.game.adultUnlocked = room.kind === "sensual";
     room.game.history = Array.isArray(room.game.history) ? room.game.history : [];
     room.game.question = room.game.question && room.game.question.targetId ? room.game.question : null;
     rooms.set(room.code, room);
@@ -79,6 +82,7 @@ function roomSnapshot(room, playerId) {
     type: "room",
     room: {
       code: room.code,
+      kind: room.kind,
       hostId: room.hostId,
       players: room.players.map(({ id, name, online }) => ({ id, name, online, host: id === room.hostId })),
       customQuestions: room.customQuestions,
@@ -120,7 +124,7 @@ function makeGame() {
   };
 }
 
-function createRoom(name, socket) {
+function createRoom(name, socket, kind) {
   let code;
   do {
     code = String(randomInt(100000, 1000000));
@@ -128,20 +132,28 @@ function createRoom(name, socket) {
   const player = { id: randomUUID(), name: name || "Joueur 1", online: true };
   const room = {
     code,
+    kind,
     hostId: player.id,
     players: [player],
     customQuestions: [],
     game: makeGame(),
     connections: new Map([[player.id, socket]])
   };
+  room.game.adultUnlocked = kind === "sensual";
   rooms.set(code, room);
   clients.set(socket, { room, playerId: player.id });
   persistAndBroadcast(room);
 }
 
-function joinRoom(code, name, reconnectId, socket, reclaim = false) {
+function joinRoom(code, name, reconnectId, socket, reclaim = false, kind) {
   const room = rooms.get(code);
   if (!room) return sendError(socket, "Salle introuvable. Vérifiez le code à 6 chiffres.");
+  // Une salle classique et une salle sensuelle ne se mélangent jamais.
+  if (room.kind !== kind) {
+    return sendError(socket, room.kind === "sensual"
+      ? "Ce code correspond à une salle du jeu sensuel 18+. Entrez-y depuis l'accueil 18+."
+      : "Ce code correspond à une soirée classique. Entrez-y depuis l'accueil du jeu.");
+  }
   let player = reconnectId ? room.players.find(item => item.id === reconnectId) : null;
   if (player && room.connections.has(player.id)) {
     const existing = room.connections.get(player.id);
@@ -271,11 +283,12 @@ function handleMessage(socket, data) {
   if (message.type === "create" || message.type === "join") {
     if (clients.has(socket)) return sendError(socket, "Cette connexion est déjà dans une salle.");
     const name = cleanName(message.name);
-    if (message.type === "create") return createRoom(name, socket);
+    const kind = message.kind === "sensual" ? "sensual" : "classic";
+    if (message.type === "create") return createRoom(name, socket, kind);
     const code = typeof message.code === "string" ? message.code.trim() : "";
     if (!/^\d{6}$/.test(code)) return sendError(socket, "Le code de salle doit contenir 6 chiffres.");
     const reconnectId = typeof message.playerId === "string" ? message.playerId : "";
-    return joinRoom(code, name, reconnectId, socket, message.reclaim === true);
+    return joinRoom(code, name, reconnectId, socket, message.reclaim === true, kind);
   }
 
   const context = clients.get(socket);
@@ -332,9 +345,17 @@ function handleMessage(socket, data) {
       if (!target) return sendError(socket, "Choisissez la personne à qui poser la question.");
       if (target.id === playerId) return sendError(socket, "Vous ne pouvez pas vous interroger vous-même.");
       const mode = typeof message.mode === "string" ? message.mode : "custom";
-      const allowedModes = ["truth", "action", "wouldYouRather", "qcm", "adult", "custom"];
-      if (!allowedModes.includes(mode)) return sendError(socket, "Type de question inconnu.");
-      if (mode === "adult" && !game.adultUnlocked) return sendError(socket, "Le mode 18+ n'est pas déverrouillé.");
+      // Chaque espace a ses propres questions : pas de contenu 18+ dans une soirée classique.
+      const sensualRoom = room.kind === "sensual";
+      const allowedModes = sensualRoom ? ["adult", "custom"] : ["truth", "action", "wouldYouRather", "qcm", "custom"];
+      if (!allowedModes.includes(mode)) {
+        return sendError(socket, mode === "adult"
+          ? "Le jeu sensuel est une salle à part : rejoignez-le depuis l'accueil 18+."
+          : "Type de question inconnu.");
+      }
+      if (mode === "adult" && !game.adultUnlocked) return sendError(socket, "Le jeu sensuel n'est pas disponible dans cette salle.");
+      const category = mode === "adult" && ["truth", "action", "consequence"].includes(message.category) ? message.category : "";
+      if (mode === "adult" && !category) return sendError(socket, "Choisissez une catégorie de question sensuelle.");
       const text = typeof message.text === "string" ? message.text.trim().slice(0, 500) : "";
       const options = Array.isArray(message.options)
         ? message.options.filter(option => typeof option === "string").slice(0, 4).map(option => option.slice(0, 180))
@@ -350,6 +371,7 @@ function handleMessage(socket, data) {
         targetId: target.id,
         target: target.name,
         mode,
+        category,
         text,
         answer: ""
       };
@@ -357,6 +379,7 @@ function handleMessage(socket, data) {
       if (game.history.length > 50) game.history.shift();
       game.question = {
         mode,
+        category,
         text,
         options,
         askerId: playerId,
@@ -429,12 +452,14 @@ function handleMessage(socket, data) {
       persistAndBroadcast(room);
       break;
     case "adultUnlock":
-      if (message.code !== "6969") return sendError(socket, "Code d'accès incorrect.");
+      // Le déverrouillage n'existe plus : le jeu sensuel est une salle à part.
+      if (room.kind !== "sensual") return sendError(socket, "Le jeu sensuel est une salle à part : rejoignez-le depuis l'accueil 18+.");
       game.adultUnlocked = true;
       persistAndBroadcast(room);
       break;
     case "customQuestion": {
-      if (!game.adultUnlocked) return sendError(socket, "Déverrouillez d'abord le mode 18+.");
+      // La bibliothèque de questions personnalisées appartient au jeu sensuel.
+      if (room.kind !== "sensual") return sendError(socket, "Cette fonction appartient au jeu sensuel 18+.");
       const text = typeof message.text === "string" ? message.text.trim().slice(0, 220) : "";
       const category = ["truth", "action", "consequence"].includes(message.category) ? message.category : "";
       if (text.length < 8 || !category) return sendError(socket, "Question ou catégorie invalide.");

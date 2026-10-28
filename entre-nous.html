@@ -199,7 +199,10 @@
     .draft-mini-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .ask-custom { margin-top: 10px; }
     .notice { min-height: 18px; margin: 9px 0 0; color: var(--rose); font-size: 10px; line-height: 1.6; }
-    .adult-bar { display: flex; justify-content: center; margin-top: 15px; }
+    .sensual-panel { border-color: rgba(232,160,160,.38); }
+    .sensual-panel h2, .sensual-panel .count { color: var(--rose); }
+    .sensual-bar { display: grid; gap: 10px; margin-top: 16px; }
+    .sensual-bar button { width: 100%; }
     .adult-state { color: var(--rose); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
     .adult-tools { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
     .adult-tools.visible { display: block; animation: rise .35s ease both; }
@@ -365,6 +368,18 @@
           <p class="fine-print">Votre nom et le nombre de joueurs s'affichent dans la salle, une fois connecté.</p>
         </div>
 
+        <div class="panel sensual-panel">
+          <div class="section-head">
+            <h2>Jeu sensuel · 18+</h2>
+            <span class="count">espace à part</span>
+          </div>
+          <p class="online-hint">Une autre soirée, entièrement séparée du jeu classique : ses propres salles, ses propres questions, ses propres codes. Aucune catégorie 18+ n'apparaît jamais dans la soirée Entre Nous.</p>
+          <div class="setup-actions">
+            <button class="rose-button wide" id="sensualEntry" type="button">Entrer dans le jeu sensuel</button>
+          </div>
+          <p class="fine-print">Réservé aux adultes. Vous pourrez toujours passer votre tour.</p>
+        </div>
+
         <details class="panel local-panel" id="localPanel">
           <summary>Jouer à plusieurs sur un seul appareil</summary>
           <div class="section-head">
@@ -380,16 +395,43 @@
           <div class="setup-actions">
             <button class="gold-button wide" id="playButton" type="button">Jouer</button>
           </div>
-          <div class="adult-bar">
-            <button class="rose-button" id="adultButton" type="button">Mode 18+ · ouvrir la page dédiée</button>
-          </div>
           <p class="fine-print">Chacun peut passer son tour. Le plus important : que tout le monde soit à l'aise.</p>
         </details>
       </section>
 
+      <section class="view" id="sensualEntryView" aria-live="polite">
+        <p class="intro">Espace séparé · réservé aux adultes</p>
+        <h1 style="font-size:clamp(36px,8.6vw,58px)">JEU SENSUEL</h1>
+        <p class="lead">Une soirée à part, avec des questions plus intimes. Mêmes règles qu'en ligne : chacun reçoit les questions sur son appareil et répond lui-même.</p>
+        <div class="panel sensual-panel">
+          <div class="section-head">
+            <h2>Connexion au jeu sensuel</h2>
+            <span class="count">6 chiffres</span>
+          </div>
+          <p class="online-hint">Entrez le code d'une salle sensuelle, ou créez-en une nouvelle. Aucun prénom n'est demandé avant l'entrée.</p>
+          <form class="room-form" id="sensualRoomForm">
+            <label for="sensualRoomCode">Code de la salle</label>
+            <input id="sensualRoomCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres">
+            <button class="gold-button wide" type="submit">Rejoindre la salle</button>
+          </form>
+          <div class="setup-actions">
+            <button class="rose-button wide" id="sensualCreateButton" type="button">Créer une salle sensuelle</button>
+            <button class="subtle-button wide" id="sensualResumeButton" type="button" hidden>Reprendre la salle</button>
+          </div>
+          <p class="notice" id="sensualNotice" role="status"></p>
+          <p class="fine-print">Votre nom et le nombre de joueurs s'affichent dans la salle, une fois connecté.</p>
+          <div class="sensual-bar">
+            <button class="subtle-button wide" id="adultButton" type="button">Jouer hors ligne sur un seul appareil</button>
+          </div>
+          <div class="setup-actions">
+            <button class="subtle-button wide" id="sensualBackHome" type="button">← Retour à l'accueil</button>
+          </div>
+        </div>
+      </section>
+
       <section class="view" id="adultView" aria-live="polite">
-        <p class="intro">Page dédiée · réservé aux adultes</p>
-        <h1 style="font-size:clamp(38px,9vw,60px)">MODE 18+</h1>
+        <p class="intro">Hors ligne · un seul appareil</p>
+        <h1 style="font-size:clamp(38px,9vw,60px)">JEU SENSUEL</h1>
         <p class="lead">Choisis une catégorie, sélectionne une question chaude ou écris la vôtre. La question est montrée au joueur dont c'est le tour.</p>
         <div class="turn-head">
           <p class="turn-count" id="adultTurnCount">Tour 01</p>
@@ -455,7 +497,7 @@
       </section>
 
       <section class="view" id="onlineView" aria-live="polite">
-        <p class="intro">Partie en réseau</p>
+        <p class="intro" id="onlineIntro">Partie en réseau</p>
         <div class="turn-head">
           <p class="turn-count" id="onlineRoomTitle">Salle · ------</p>
           <p class="question-progress" id="onlineConnection">Connexion en cours…</p>
@@ -489,13 +531,17 @@
                 <label for="onlineTarget">À qui posez-vous la question ?</label>
                 <select id="onlineTarget" aria-label="Personne à interroger"></select>
               </div>
-              <p class="picker-note ask-or">Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.</p>
+              <p class="picker-note ask-or" id="onlineAskNote">Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.</p>
               <div class="mode-grid" id="onlineModes">
                 <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité</span></button>
                 <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action</span></button>
                 <button class="mode-button" data-online-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Choix multiple</span></button>
                 <button class="mode-button" data-online-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
-                <button class="mode-button" data-online-mode="adult" type="button"><span class="mode-icon">18+</span><span class="mode-name">Mode 18+</span></button>
+              </div>
+              <div class="mode-grid" id="onlineSensualModes" hidden>
+                <button class="mode-button" data-sensual-category="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité chaude</span></button>
+                <button class="mode-button" data-sensual-category="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action sensuelle</span></button>
+                <button class="mode-button" data-sensual-category="consequence" type="button"><span class="mode-icon">☷</span><span class="mode-name">Conséquence</span></button>
               </div>
               <button class="subtle-button wide ask-custom" id="onlineWriteOwn" type="button">Écrire ma propre question</button>
               <div class="draft-box" id="onlineDraft" hidden>
@@ -516,7 +562,7 @@
             <div class="card-stage" id="onlineCard"></div>
             <div class="adult-tools" id="onlineAdultTools" hidden>
               <form id="onlineCustomQuestionForm">
-                <label for="onlineCustomCategory">Catégorie 18+ et des questions personnalisées</label>
+                <label for="onlineCustomCategory">Catégorie et questions personnalisées du jeu sensuel</label>
                 <select id="onlineCustomCategory" aria-label="Catégorie de la question personnalisée">
                   <option value="truth">Vérité chaude</option>
                   <option value="action">Action sensuelle</option>
@@ -531,7 +577,6 @@
               <p class="picker-note">Menu debug</p>
               <div class="picker-actions">
                 <button class="subtle-button" id="debugNext" type="button">Tour suivant</button>
-                <button class="subtle-button" id="debugAdult" type="button">Débloquer 18+</button>
                 <button class="subtle-button" id="debugHistory" type="button">Vider l'historique</button>
                 <button class="subtle-button" id="debugPlayer" type="button">Changer de joueur</button>
               </div>
@@ -565,7 +610,7 @@
   <div class="modal-backdrop" id="codeModal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
     <form class="modal" id="codeForm">
       <h2 id="codeTitle">Un petit code entre nous</h2>
-      <p>Le mode 18+ propose des questions plus intimes. Vous pouvez toujours passer votre tour.</p>
+      <p>Le jeu sensuel propose des questions plus intimes. Vous pouvez toujours passer votre tour.</p>
       <label for="accessCode">Code d'accès</label>
       <input id="accessCode" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••">
       <p class="notice" id="codeNotice" role="status"></p>
@@ -871,7 +916,7 @@
       }
 
       function setView(view) {
-        for (const item of views) item.classList.toggle("active", item === view);
+        document.querySelectorAll(".view").forEach(item => item.classList.toggle("active", item === view));
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
@@ -1328,7 +1373,7 @@
         }
         adultUnlocked = true;
         codeModal.classList.remove("visible");
-        $("#adultButton").textContent = "Ouvrir la page du mode 18+";
+        $("#adultButton").textContent = "Ouvrir la page du jeu sensuel";
         populateAdultQuestions();
         startGame("adult");
       }
@@ -1399,7 +1444,7 @@
 
       function lockAdultMode() {
         adultUnlocked = false;
-        $("#adultButton").textContent = "Mode 18+ · ouvrir la page dédiée";
+        $("#adultButton").textContent = "Jouer hors ligne sur un seul appareil";
         $("#adultCardStage").replaceChildren();
         $("#adultBackToPicker").hidden = true;
         renderPlayers();
@@ -1572,17 +1617,38 @@
           truth: [
             "Quel fantasme romantique ou sensuel gardes-tu d'habitude pour toi ? Tu peux rester vague.",
             "Décris ton idéal de rendez-vous sensuel en une phrase.",
-            "Quel geste tendre te fait te sentir particulièrement désiré·e ?"
+            "Quel geste tendre te fait te sentir particulièrement désiré·e ?",
+            "À quel moment as-tu eu la plus belle étincelle avec quelqu'un ?",
+            "Quelle musique te met tout de suite dans une ambiance sensuelle ?",
+            "Quelle est la plus jolie chose qu'on t'ait jamais dite pour te séduire ?",
+            "Tu préfères un baiser lent ou un regard insistant ? Explique en un mot.",
+            "Quel parfum ou quelle odeur te fait fondre ?",
+            "Quelle partie du corps d'une personne te fait le plus craquer ?",
+            "Raconte un moment où tu as joué à séduire sans rien dire."
           ],
           action: [
             "Fais un compliment séduisant à une personne qui est d'accord pour le recevoir.",
             "Décris avec délicatesse ton idée d'un rendez-vous romantique.",
-            "Choisis une chanson qui évoque la séduction et explique ton choix."
+            "Choisis une chanson qui évoque la séduction et explique ton choix.",
+            "Regarde la personne de ton choix dans les yeux pendant quinze secondes.",
+            "Fais deviner le parfum de la personne en face avec un seul geste.",
+            "Choisis un message doux et provocant à glisser dans le téléphone du joueur de ton choix, si elle ou il est d'accord.",
+            "Suggère une danse lente en expliquant pourquoi ce serait parfait.",
+            "Fais un compliment à la personne la plus proche de toi.",
+            "Fais le clin d'œil le plus efficace que tu connaisses.",
+            "Choisis une personne et dis-lui en deux mots ce qui te trouble chez elle."
           ],
           consequence: [
             "Raconte un moment où tu t'es senti·e particulièrement séduisant·e.",
             "Décris un geste romantique que tu aimerais recevoir.",
-            "Fais un toast à la personne qui t'a le plus fait sourire ce soir."
+            "Fais un toast à la personne qui t'a le plus fait sourire ce soir.",
+            "Laisse la personne à ta droite choisir une chanson douce pour la suite.",
+            "Raconte ton meilleur rendez-vous en trente secondes.",
+            "Propose une courte séance de massage des épaules à la personne de ton choix, si elle est d'accord.",
+            "Raconte la plus belle séduction que tu aies vue autour de toi ce soir.",
+            "Envoie une pensée tendre à la personne de ton choix.",
+            "Raconte un détail que tu as remarqué chez quelqu'un ce soir.",
+            "Si tu devais séduire cette soirée en un geste, ce serait lequel ?"
           ]
         }
       };
@@ -1592,18 +1658,20 @@
       const roomForm = $net("#roomForm");
       const roomCodeInput = $net("#roomCode");
       const roomNotice = $net("#roomNotice");
+      const setupHomeView = $net("#setupView");
+      const sensualEntryView = $net("#sensualEntryView");
       const onlineView = $net("#onlineView");
       let socket = null;
       let room = null;
       let playerId = null;
       let currentCode = "";
+      let roomKind = "classic";
       let joinMode = "create";
       let reconnectTimer = 0;
       let reconnectAttempts = 0;
       let stopReconnect = true;
       let leaving = false;
       let roomClosed = false;
-      let pendingAdultMode = false;
       let draft = null;
       let debugVisible = false;
       let lastQuestionKey = "";
@@ -1661,13 +1729,14 @@
         }
       }
 
-      function saveLastRoom(code, id, name, host) {
+      function saveLastRoom(code, id, name, host, kind) {
         if (!code || !id) return;
         const list = readSavedRooms();
         const index = list.findIndex(item => item.code === code && item.playerId === id);
         const previous = index >= 0 ? list[index] : null;
         const entry = {
           code,
+          kind: kind === "sensual" ? "sensual" : "classic",
           playerId: id,
           name: name || (previous ? previous.name : ""),
           host: Boolean(host || (previous && previous.host)),
@@ -1685,8 +1754,11 @@
           .map(item => item.playerId);
       }
 
-      function findSavedRoom() {
-        return readSavedRooms().sort((a, b) => b.savedAt - a.savedAt)[0] || null;
+      // Chaque accueil ne reprend que ses propres salles : classique ou sensuelle.
+      function findSavedRoom(kind) {
+        return readSavedRooms()
+          .filter(item => (item.kind === "sensual") === (kind === "sensual"))
+          .sort((a, b) => b.savedAt - a.savedAt)[0] || null;
       }
 
       // Une salle fermée n'a plus de place à reprendre : on oublie toutes ses entrées.
@@ -1700,16 +1772,22 @@
         clearLastRoom(code);
       }
 
-      function updateResumeButton() {
-        const saved = findSavedRoom();
+      // Le message d'erreur s'affiche sur l'accueil concerné : classique ou sensuel.
+      function entryNotice() {
+        return roomKind === "sensual" ? $net("#sensualNotice") : roomNotice;
+      }
+
+      function updateResumeButton(kind) {
+        const selector = kind === "sensual" ? "#sensualResumeButton" : "#resumeRoomButton";
+        const saved = findSavedRoom(kind);
         if (!saved) {
-          setHidden("#resumeRoomButton", true);
+          setHidden(selector, true);
           return;
         }
         const identities = readSavedRooms().filter(item => item.code === saved.code);
         const label = identities.length === 1 && saved.name ? `${saved.code} · ${saved.name}` : saved.code;
-        $net("#resumeRoomButton").textContent = `Reprendre la salle ${label}`;
-        setHidden("#resumeRoomButton", false);
+        $net(selector).textContent = `Reprendre la salle ${label}`;
+        setHidden(selector, false);
       }
 
       function send(type, payload = {}) {
@@ -1721,20 +1799,20 @@
         return true;
       }
 
-      function startOnline(code, mode) {
+      function startOnline(code, mode, kind = "classic") {
         window.clearTimeout(reconnectTimer);
         reconnectTimer = 0;
         reconnectAttempts = 0;
         stopReconnect = false;
         leaving = false;
         roomClosed = false;
-        pendingAdultMode = false;
         draft = null;
         debugVisible = false;
         lastQuestionKey = "";
         selectedTargetId = "";
         room = null;
         playerId = null;
+        roomKind = kind === "sensual" ? "sensual" : "classic";
         currentCode = mode === "create" ? "" : code;
         joinMode = mode;
         resumeQueue = mode === "resume" ? resumeCandidatesFor(code) : [];
@@ -1747,7 +1825,7 @@
             /* liaison déjà fermée */
           }
         }
-        roomNotice.textContent = "Connexion au serveur…";
+        entryNotice().textContent = "Connexion au serveur…";
         $net("#onlineConnection").textContent = "Connexion en cours…";
         $net("#onlineNotice").textContent = "";
         $net("#onlineDraftText").value = "";
@@ -1756,7 +1834,7 @@
         $net("#onlineDebug").classList.remove("visible");
         if (!["http:", "https:"].includes(location.protocol)) {
           stopReconnect = true;
-          roomNotice.textContent = "Pour le réseau, lancez le serveur et ouvrez http://localhost:3000 (pas le fichier directement).";
+          entryNotice().textContent = "Pour le réseau, lancez le serveur et ouvrez http://localhost:3000 (pas le fichier directement).";
           return;
         }
         openSocket();
@@ -1766,13 +1844,14 @@
         if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) return;
         const mode = joinMode;
         const code = currentCode;
+        const kind = roomKind;
         const ws = new WebSocket(`${location.protocol === "https:" ? "wss:" : "ws:"}//${location.host}/ws`);
         socket = ws;
         ws.addEventListener("open", () => {
           if (socket !== ws) return;
           reconnectAttempts = 0;
           if (mode === "create") {
-            send("create");
+            send("create", { kind });
             return;
           }
           const identity = mode === "reconnect"
@@ -1780,7 +1859,7 @@
             : mode === "resume"
               ? (resumeQueue.shift() || "")
               : readSessionIdentity(code);
-          send("join", { code, playerId: identity, reclaim: mode === "reconnect" });
+          send("join", { code, playerId: identity, reclaim: mode === "reconnect", kind });
         });
         ws.addEventListener("message", event => {
           if (socket !== ws) return;
@@ -1800,7 +1879,7 @@
           if (!room) {
             // La salle n'a jamais été rejointe : inutile de boucler sur une adresse injoignable.
             stopReconnect = true;
-            roomNotice.textContent = "Connexion au serveur interrompue. Vérifiez qu'il est démarré, puis réessayez.";
+            entryNotice().textContent = "Connexion au serveur interrompue. Vérifiez qu'il est démarré, puis réessayez.";
             $net("#onlineConnection").textContent = "Serveur injoignable";
             return;
           }
@@ -1812,7 +1891,7 @@
         });
         ws.addEventListener("error", () => {
           if (socket !== ws) return;
-          if (!room) roomNotice.textContent = "Impossible de joindre le serveur. Vérifiez qu'il est démarré.";
+          if (!room) entryNotice().textContent = "Impossible de joindre le serveur. Vérifiez qu'il est démarré.";
         });
       }
 
@@ -1859,13 +1938,14 @@
           room = message.room;
           playerId = message.playerId;
           currentCode = room.code;
+          roomKind = room.kind === "sensual" ? "sensual" : "classic";
           joinMode = "join";
           reconnectAttempts = 0;
           roomClosed = false;
           saveIdentity(room.code, playerId);
           const me = room.players.find(player => player.id === playerId);
-          saveLastRoom(room.code, playerId, me ? me.name : "", Boolean(me && me.host));
-          roomNotice.textContent = "";
+          saveLastRoom(room.code, playerId, me ? me.name : "", Boolean(me && me.host), roomKind);
+          entryNotice().textContent = "";
           renderRoom();
         }
       }
@@ -1877,19 +1957,19 @@
         if (duplicate && joinMode === "reconnect") {
           joinMode = "join";
           clearSessionIdentity(currentCode);
-          roomNotice.textContent = "Votre place a été reprise. Vous entrez comme nouveau joueur.";
+          entryNotice().textContent = "Votre place a été reprise. Vous entrez comme nouveau joueur.";
           retryOpen(400);
           return;
         }
         if (duplicate && joinMode === "resume") {
           if (resumeQueue.length) {
-            roomNotice.textContent = "Cette place est déjà ouverte. Tentative de reprise d'une autre place de la salle…";
+            entryNotice().textContent = "Cette place est déjà ouverte. Tentative de reprise d'une autre place de la salle…";
             retryOpen(300);
             return;
           }
           joinMode = "join";
           clearSessionIdentity(currentCode);
-          roomNotice.textContent = "Toutes les places enregistrées sont déjà ouvertes. Vous entrez comme nouveau joueur.";
+          entryNotice().textContent = "Toutes les places enregistrées sont déjà ouvertes. Vous entrez comme nouveau joueur.";
           retryOpen(400);
           return;
         }
@@ -1919,7 +1999,26 @@
           goHome(`${message} Demandez un nouveau code à l'hôte.`);
           return;
         }
-        roomNotice.textContent = message;
+        // Un code n'ouvre qu'un type de salle : la soirée classique ou le jeu sensuel.
+        if (message.startsWith("Ce code correspond à")) {
+          stopReconnect = true;
+          const previous = socket;
+          socket = null;
+          if (previous) {
+            try {
+              previous.close(1000, "Mauvais type de salle");
+            } catch (error) {
+              /* liaison déjà fermée */
+            }
+          }
+          room = null;
+          playerId = null;
+          currentCode = "";
+          resetOnlineUi();
+          goHome(message);
+          return;
+        }
+        entryNotice().textContent = message;
         $net("#onlineNotice").textContent = message;
         const nameInput = $net("#onlineName");
         const myPlayer = room && room.players.find(player => player.id === playerId);
@@ -1963,15 +2062,30 @@
       }
 
       function goHome(message) {
-        document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view.id === "setupView"));
-        roomNotice.textContent = message || "";
-        updateResumeButton();
+        showView(roomKind === "sensual" ? sensualEntryView : setupHomeView);
+        entryNotice().textContent = message || "";
+        updateResumeButton("classic");
+        updateResumeButton("sensual");
+      }
+
+      function showView(view) {
+        document.querySelectorAll(".view").forEach(item => item.classList.toggle("active", item === view));
         window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function resumeFrom(kind) {
+        const saved = findSavedRoom(kind);
+        if (!saved) {
+          updateResumeButton(kind);
+          return;
+        }
+        startOnline(saved.code, "resume", kind);
       }
 
       function resetOnlineUi() {
         window.clearTimeout(copyFeedbackTimer);
         draft = null;
+        $net("#onlineIntro").textContent = "Partie en réseau";
         $net("#onlineCopyCode").textContent = "Copier le code";
         $net("#onlineName").value = "";
         $net("#onlinePlayers").replaceChildren();
@@ -1991,13 +2105,14 @@
         setHidden("#onlineGame", true);
         setHidden("#onlineStart", true);
         setHidden("#onlineAdultTools", true);
+        setHidden("#onlineModes", false);
+        setHidden("#onlineSensualModes", true);
         setHidden("#onlineDebug", true);
         $net("#onlineDebug").classList.remove("visible");
       }
 
       function setOnlineView() {
-        document.querySelectorAll(".view").forEach(view => view.classList.toggle("active", view === onlineView));
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        showView(onlineView);
       }
 
       function setHidden(selector, hidden) {
@@ -2014,7 +2129,9 @@
         const activePlayer = room.players[game.activeIndex];
         const myTurn = Boolean(game.started && !game.ended && activePlayer && activePlayer.id === playerId);
         const hostPlayer = room.players.find(player => player.host);
-        $net("#onlineRoomTitle").textContent = `Salle · ${room.code}`;
+        const sensual = roomKind === "sensual";
+        $net("#onlineIntro").textContent = sensual ? "Jeu sensuel · 18+" : "Partie en réseau";
+        $net("#onlineRoomTitle").textContent = sensual ? `Salle sensuelle · ${room.code}` : `Salle · ${room.code}`;
         $net("#onlineRoomCodeLabel").textContent = isHost ? "Votre code de salle à partager" : "Code de la salle";
         const roomCodeElement = $net("#onlineRoomCode");
         if (roomCodeElement.textContent !== room.code) {
@@ -2059,8 +2176,14 @@
               : "À vous de choisir qui interroger.")
             : `C'est à ${activePlayer.name} de poser les questions.`
           : "En attente du lancement par l'hôte.";
-        setHidden("#onlineAdultTools", !(game.adultUnlocked && game.started && !game.ended));
-        $net("#onlineAdultTools").classList.toggle("visible", game.adultUnlocked && game.started && !game.ended);
+        const sensualTools = sensual && game.started && !game.ended;
+        setHidden("#onlineAdultTools", !sensualTools);
+        $net("#onlineAdultTools").classList.toggle("visible", sensualTools);
+        setHidden("#onlineModes", sensual);
+        setHidden("#onlineSensualModes", !sensual);
+        $net("#onlineAskNote").textContent = sensual
+          ? "Choisissez une catégorie : le jeu propose une question sensuelle, que vous pouvez ajuster ou remplacer."
+          : "Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.";
         $net("#onlineCustomCount").textContent = `${room.customQuestions.length} question(s) personnalisée(s) enregistrée(s) dans cette salle.`;
         setHidden("#onlineDebug", !debugVisible);
         $net("#onlineDebug").classList.toggle("visible", debugVisible);
@@ -2108,10 +2231,6 @@
           lastQuestionKey = "";
           $net("#onlineCard").replaceChildren();
         }
-        if (pendingAdultMode && asking && game.adultUnlocked) {
-          pendingAdultMode = false;
-          proposeMode("adult");
-        }
       }
 
       function renderTargetPicker() {
@@ -2154,12 +2273,20 @@
         return article;
       }
 
-      function modeLabel(mode) {
-        if (mode === "adult") return "Mode 18+";
-        if (mode === "wouldYouRather") return "Tu préfères";
-        if (mode === "qcm") return "Choix multiple";
-        if (mode === "action") return "Action";
-        if (mode === "truth") return "Vérité";
+      function categoryLabel(category) {
+        if (category === "truth") return "Vérité chaude";
+        if (category === "action") return "Action sensuelle";
+        if (category === "consequence") return "Conséquence";
+        return "Jeu sensuel";
+      }
+
+      function questionLabel(question) {
+        if (question.mode === "adult") return categoryLabel(question.category);
+        if (question.mode === "custom") return "Question libre";
+        if (question.mode === "wouldYouRather") return "Tu préfères";
+        if (question.mode === "qcm") return "Choix multiple";
+        if (question.mode === "action") return "Action";
+        if (question.mode === "truth") return "Vérité";
         return "Question";
       }
 
@@ -2169,7 +2296,7 @@
         stage.replaceChildren();
         const question = game.question;
         if (!question) return;
-        stage.append(card(modeLabel(question.mode), question.text));
+        stage.append(card(questionLabel(question), question.text));
         const meta = document.createElement("p");
         meta.className = "question-meta";
         meta.textContent = `${question.askerName} interroge ${question.targetName}`;
@@ -2285,7 +2412,7 @@
           && room.players.some(player => player.id === selectedTargetId && player.id !== playerId));
       }
 
-      function buildProposal(mode) {
+      function buildProposal(mode, category) {
         if (mode === "wouldYouRather") {
           const pair = wouldYouRather[Math.floor(Math.random() * wouldYouRather.length)];
           return { text: "Que préfères-tu ?", options: [...pair] };
@@ -2295,15 +2422,12 @@
           return { text: entry.question, options: [...entry.options] };
         }
         if (mode === "adult") {
-          const category = $net("#onlineCustomCategory").value;
-          const custom = room.customQuestions.filter(item => item.category === category);
-          const pool = onlinePrompts.adult[category];
-          return {
-            text: custom.length
-              ? custom[Math.floor(Math.random() * custom.length)].text
-              : pool[Math.floor(Math.random() * pool.length)],
-            options: []
-          };
+          // Questions déjà enregistrées dans la salle + questions intégrées.
+          const pool = room.customQuestions
+            .filter(item => item.category === category)
+            .map(item => item.text)
+            .concat(onlinePrompts.adult[category] || []);
+          return { text: pool.length ? pool[Math.floor(Math.random() * pool.length)] : "", options: [] };
         }
         if (mode === "truth" || mode === "action") {
           const pool = onlinePrompts[mode];
@@ -2312,7 +2436,7 @@
         return { text: "", options: [] };
       }
 
-      function proposeMode(mode) {
+      function proposeMode(mode, category = "") {
         if (!room || !room.game.started || room.game.ended) return;
         if (!activeTurn()) {
           $net("#onlineNotice").textContent = "C'est au tour d'un autre joueur de poser les questions.";
@@ -2326,19 +2450,22 @@
           $net("#onlineNotice").textContent = "Choisissez d'abord la personne à interroger.";
           return;
         }
-        if (mode === "adult" && !room.game.adultUnlocked) {
-          const code = window.prompt("Code d'accès au mode 18+");
-          if (code === null) return;
-          if (code !== "6969") {
-            $net("#onlineNotice").textContent = "Code d'accès incorrect.";
+        // Chaque espace garde ses propres questions.
+        if (mode === "adult") {
+          if (roomKind !== "sensual") {
+            $net("#onlineNotice").textContent = "Le jeu sensuel est une salle à part : rejoignez-le depuis l'accueil 18+.";
             return;
           }
-          pendingAdultMode = true;
-          send("adultUnlock", { code });
+          if (!["truth", "action", "consequence"].includes(category)) {
+            $net("#onlineNotice").textContent = "Choisissez une catégorie de question sensuelle.";
+            return;
+          }
+        } else if (roomKind === "sensual") {
+          $net("#onlineNotice").textContent = "Dans le jeu sensuel, choisissez une catégorie sensuelle.";
           return;
         }
-        const proposal = buildProposal(mode);
-        draft = { mode, text: proposal.text, options: proposal.options };
+        const proposal = buildProposal(mode, category);
+        draft = { mode, category, text: proposal.text, options: proposal.options };
         renderDraft(false);
         $net("#onlineDraft").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
@@ -2376,7 +2503,7 @@
           return;
         }
         const keepMode = draft && ["truth", "action", "adult"].includes(draft.mode) ? draft.mode : "custom";
-        draft = { mode: keepMode, text: "", options: [] };
+        draft = { mode: keepMode, category: keepMode === "adult" ? draft.category : "", text: "", options: [] };
         renderDraft(true);
         $net("#onlineDraft").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
@@ -2400,6 +2527,7 @@
         }
         const sent = send("prompt", {
           mode: draft.mode,
+          category: draft.category || "",
           text,
           options: draft.options,
           targetId: selectedTargetId
@@ -2420,23 +2548,38 @@
           roomCodeInput.focus();
           return;
         }
-        startOnline(code, "join");
+        startOnline(code, "join", "classic");
       });
-      $net("#createRoomButton").addEventListener("click", () => startOnline("", "create"));
-      $net("#resumeRoomButton").addEventListener("click", () => {
-        const saved = findSavedRoom();
-        if (!saved) {
-          updateResumeButton();
+      $net("#createRoomButton").addEventListener("click", () => startOnline("", "create", "classic"));
+      $net("#resumeRoomButton").addEventListener("click", () => resumeFrom("classic"));
+
+      // Accès dédié au jeu sensuel : mêmes règles, mais salles et questions à part.
+      $net("#sensualEntry").addEventListener("click", () => {
+        $net("#sensualNotice").textContent = "";
+        updateResumeButton("sensual");
+        showView(sensualEntryView);
+        $net("#sensualRoomCode").focus();
+      });
+      $net("#sensualBackHome").addEventListener("click", () => showView(setupView));
+      $net("#sensualRoomForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const code = $net("#sensualRoomCode").value.trim();
+        $net("#sensualNotice").textContent = "";
+        if (!/^\d{6}$/.test(code)) {
+          $net("#sensualNotice").textContent = "Le code doit contenir 6 chiffres.";
+          $net("#sensualRoomCode").focus();
           return;
         }
-        startOnline(saved.code, "resume");
+        startOnline(code, "join", "sensual");
       });
+      $net("#sensualCreateButton").addEventListener("click", () => startOnline("", "create", "sensual"));
+      $net("#sensualResumeButton").addEventListener("click", () => resumeFrom("sensual"));
       $net("#onlineDraftText").addEventListener("input", event => {
         if (draft) draft.text = event.target.value;
       });
       $net("#onlineDraftSend").addEventListener("click", sendDraft);
       $net("#onlineDraftAgain").addEventListener("click", () => {
-        if (draft) proposeMode(draft.mode);
+        if (draft) proposeMode(draft.mode, draft.category);
       });
       $net("#onlineDraftCustom").addEventListener("click", writeOwnQuestion);
       $net("#onlineWriteOwn").addEventListener("click", writeOwnQuestion);
@@ -2533,7 +2676,6 @@
         debugVisible = false;
         lastQuestionKey = "";
         selectedTargetId = "";
-        pendingAdultMode = false;
         if (isHost && leftCode) clearIdentity(leftCode);
         resetOnlineUi();
         goHome(isHost
@@ -2544,6 +2686,10 @@
         const button = event.target.closest("[data-online-mode]");
         if (button) proposeMode(button.dataset.onlineMode);
       });
+      $net("#onlineSensualModes").addEventListener("click", event => {
+        const button = event.target.closest("[data-sensual-category]");
+        if (button) proposeMode("adult", button.dataset.sensualCategory);
+      });
       $net("#onlineCustomQuestionForm").addEventListener("submit", event => {
         event.preventDefault();
         const input = $net("#onlineCustomQuestion");
@@ -2551,7 +2697,6 @@
         input.value = "";
       });
       $net("#debugNext").addEventListener("click", () => send("next"));
-      $net("#debugAdult").addEventListener("click", () => send("adultUnlock", { code: "6969" }));
       $net("#debugHistory").addEventListener("click", () => send("clearHistory"));
       $net("#debugPlayer").addEventListener("click", () => {
         if (room) send("setPlayer", { index: (room.game.activeIndex + 1) % room.players.length });
@@ -2564,7 +2709,8 @@
         }
       }, true);
 
-      updateResumeButton();
+      updateResumeButton("classic");
+      updateResumeButton("sensual");
     })();
   </script>
 </body>
