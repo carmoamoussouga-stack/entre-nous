@@ -31,8 +31,8 @@
       overflow-x: hidden;
       background: var(--night);
       color: var(--text);
-      font-weight: 300;
-      letter-spacing: .035em;
+      font-weight: 400;
+      letter-spacing: .01em;
     }
 
     #ambience {
@@ -51,276 +51,374 @@
       min-height: 100vh;
       flex-direction: column;
       align-items: center;
-      padding: 40px 22px 36px;
+      padding: 26px 16px 30px;
     }
 
     .topline {
       position: absolute;
-      top: 25px;
-      left: 32px;
-      right: 32px;
+      top: 18px;
+      left: 20px;
+      right: 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       color: var(--muted);
-      font-size: 9px;
-      letter-spacing: .22em;
-      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: .04em;
+      text-transform: none;
     }
 
     .mark { color: var(--gold); }
 
     main {
       display: flex;
-      width: min(100%, 560px);
+      width: min(100%, 480px);
       flex: 1;
       flex-direction: column;
       justify-content: center;
-      padding: 55px 0 20px;
+      padding: 52px 0 20px;
     }
 
-    .view { display: none; animation: rise .55s cubic-bezier(.2,.8,.2,1) both; }
+    .view { display: none; animation: rise .45s cubic-bezier(.2,.8,.2,1) both; }
     .view.active { display: block; }
     @keyframes rise {
-      from { opacity: 0; transform: translateY(12px); }
+      from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .intro { margin: 0 0 15px; color: var(--gold); font-size: 9px; letter-spacing: .34em; text-align: center; text-transform: uppercase; }
+    .intro { margin: 0 0 14px; color: var(--gold); font-size: 13px; font-weight: 600; letter-spacing: .04em; text-align: center; text-transform: none; }
     h1, h2, p { margin-top: 0; }
     h1 {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       color: var(--text);
-      font-size: clamp(42px, 10vw, 68px);
-      font-weight: 200;
-      letter-spacing: .2em;
+      font-size: clamp(34px, 9vw, 46px);
+      font-weight: 800;
+      letter-spacing: .02em;
       line-height: 1.1;
       text-align: center;
-      text-indent: .2em;
+      text-indent: 0;
     }
-    h2 { margin-bottom: 10px; font-size: 26px; font-weight: 300; letter-spacing: .09em; }
-    .lead { max-width: 400px; margin: 0 auto 36px; color: var(--muted); font-size: 12px; line-height: 1.9; text-align: center; }
-    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+    h2 { margin-bottom: 10px; font-size: 20px; font-weight: 700; letter-spacing: .01em; }
+    .lead { max-width: 400px; margin: 0 auto 26px; color: var(--muted); font-size: 15px; line-height: 1.6; text-align: center; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
     .section-head h2 { margin: 0; font-size: 18px; }
-    .count { color: var(--muted); font-size: 10px; }
+    .count { color: var(--muted); font-size: 14px; font-weight: 600; }
 
     .panel {
-      padding: 23px;
-      border: 1px solid var(--line);
-      background: linear-gradient(145deg, rgba(30,29,36,.9), rgba(20,20,27,.9));
-      box-shadow: 0 22px 80px rgba(0,0,0,.2);
+      padding: 22px;
+      border: 1px solid rgba(242, 238, 232, .08);
+      border-radius: 24px;
+      background: linear-gradient(160deg, rgba(32,32,41,.95), rgba(22,22,29,.95));
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
     }
-    .player-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .player-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
     .online-identity { margin: 0 0 14px; padding: 0 0 14px; border-bottom: 1px solid var(--line); }
-    .online-identity label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    .online-identity label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .online-identity .add-row { margin-top: 0; }
     .online-identity .picker-note { margin-top: 7px; }
     .player-row {
       display: flex;
-      min-height: 42px;
+      min-height: 52px;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 0 0 0 13px;
-      border: 1px solid rgba(242,238,232,.075);
-      background: rgba(255,255,255,.018);
+      padding: 0 6px 0 16px;
+      border: 1px solid rgba(242,238,232,.06);
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
       color: var(--text);
-      font-size: 12px;
+      font-size: 16px;
+      font-weight: 600;
       animation: rise .28s ease both;
     }
-    .player-row button { width: 40px; min-height: 40px; padding: 0; border: 0; color: var(--muted); font-size: 17px; }
-    .player-row button:hover { color: var(--rose); }
-    .empty { margin: 0; padding: 16px 0; color: var(--muted); font-size: 11px; text-align: center; }
+    .player-row button { width: 44px; min-height: 44px; padding: 0; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font-size: 22px; }
+    .player-row button:hover { color: var(--rose); background: rgba(232,160,160,.1); }
+    .empty { margin: 0; padding: 18px 0; color: var(--muted); font-size: 15px; text-align: center; }
     .add-row { display: flex; gap: 8px; margin-top: 15px; }
     input, select, textarea {
       width: 100%;
       min-width: 0;
-      border: 1px solid var(--line);
-      border-radius: 0;
+      border: 1px solid rgba(242,238,232,.12);
+      border-radius: 16px;
       outline: none;
       background: rgba(9,9,13,.56);
       color: var(--text);
       font: inherit;
-      font-size: 12px;
-      letter-spacing: .04em;
+      font-size: 17px;
+      letter-spacing: 0;
       transition: border-color .22s ease, box-shadow .22s ease;
     }
-    input, select { min-height: 44px; padding: 0 12px; }
-    textarea { min-height: 82px; padding: 12px; resize: vertical; line-height: 1.6; }
-    input:focus, select:focus, textarea:focus { border-color: rgba(212,175,55,.7); box-shadow: 0 0 0 2px rgba(212,175,55,.08); }
+    input, select { min-height: 54px; padding: 0 16px; }
+    textarea { min-height: 92px; padding: 14px 16px; resize: vertical; line-height: 1.5; }
+    input:focus, select:focus, textarea:focus { border-color: rgba(212,175,55,.7); box-shadow: 0 0 0 3px rgba(212,175,55,.1); }
     input::placeholder, textarea::placeholder { color: #79757d; }
 
     button {
       display: inline-flex;
-      min-height: 43px;
+      min-height: 52px;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      padding: 0 16px;
-      border: 1px solid var(--line);
-      border-radius: 0;
-      background: transparent;
+      gap: 10px;
+      padding: 0 18px;
+      border: 1px solid rgba(242,238,232,.1);
+      border-radius: 16px;
+      background: rgba(255,255,255,.05);
       color: var(--text);
       font: inherit;
-      font-size: 10px;
-      letter-spacing: .12em;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: .01em;
       cursor: pointer;
-      transition: transform .24s cubic-bezier(.2,.8,.2,1), border-color .24s ease, background .24s ease, color .24s ease;
+      transition: transform .18s cubic-bezier(.2,.8,.2,1), border-color .22s ease, background .22s ease, color .22s ease;
     }
-    button:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(212,175,55,.55); }
-    button:active:not(:disabled) { transform: translateY(0) scale(.985); }
+    button:hover:not(:disabled) { transform: translateY(-2px); border-color: rgba(212,175,55,.45); }
+    button:active:not(:disabled) { transform: translateY(0) scale(.97); }
     button:disabled { cursor: not-allowed; opacity: .38; }
-    button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-    .gold-button { border-color: var(--gold); background: var(--gold); color: #17150d; font-weight: 500; }
-    .gold-button:hover:not(:disabled) { background: #e3c35a; color: #111; }
-    .rose-button { border-color: rgba(232,160,160,.48); color: var(--rose); }
-    .subtle-button { color: var(--muted); }
+    button:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    .gold-button {
+      border: 0;
+      background: linear-gradient(135deg, #e8c65c, var(--gold) 55%, #b8912b);
+      color: #17130a;
+      box-shadow: 0 10px 26px rgba(212,175,55,.25);
+    }
+    .gold-button:hover:not(:disabled) { background: linear-gradient(135deg, #f0d270, #dfbe48 55%, #c49c30); color: #111; box-shadow: 0 14px 30px rgba(212,175,55,.35); }
+    .rose-button {
+      border: 0;
+      background: linear-gradient(135deg, #f3b9b9, var(--rose) 55%, #c97f7f);
+      color: #2a1414;
+      box-shadow: 0 10px 26px rgba(232,160,160,.22);
+    }
+    .rose-button:hover:not(:disabled) { background: linear-gradient(135deg, #f7c6c6, #e2adad 55%, #d08c8c); color: #201010; box-shadow: 0 14px 30px rgba(232,160,160,.32); }
+    .subtle-button { color: var(--text); background: rgba(255,255,255,.05); }
+    .subtle-button:hover:not(:disabled) { background: rgba(255,255,255,.09); }
     .wide { width: 100%; }
-    .setup-actions { display: grid; gap: 10px; margin-top: 19px; }
-    .fine-print { margin: 15px 0 0; color: var(--muted); font-size: 9px; line-height: 1.7; text-align: center; }
-    .online-hint { margin: 0 0 17px; color: var(--muted); font-size: 10px; line-height: 1.8; text-align: center; }
-    .room-form { display: grid; gap: 9px; }
-    .room-form label { color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
-    .room-form .gold-button { margin-top: 3px; }
+    .setup-actions { display: grid; gap: 10px; margin-top: 16px; }
+    .fine-print { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
+    .online-hint { margin: 0 0 15px; color: var(--muted); font-size: 14px; line-height: 1.5; text-align: center; }
+    .room-form { display: grid; gap: 10px; }
+    .room-form input { text-align: center; font-size: 22px; font-weight: 800; letter-spacing: .28em; }
+    .room-form label { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .room-form .gold-button { margin-top: 2px; }
     .local-panel { margin-top: 14px; }
-    .local-panel > summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; color: var(--muted); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; list-style: none; }
+    .local-panel > summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px;
+      border: 1px solid rgba(242,238,232,.08);
+      border-radius: 20px;
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      list-style: none;
+    }
     .local-panel > summary::-webkit-details-marker { display: none; }
-    .local-panel > summary::after { color: var(--gold); font-size: 16px; content: "+"; }
+    .local-panel > summary::after { margin-left: auto; color: var(--gold); font-size: 22px; content: "+"; }
     .local-panel[open] > summary::after { content: "–"; }
-    .local-panel > summary:hover { color: var(--text); }
+    .local-panel > summary:hover { border-color: rgba(212,175,55,.4); }
     .local-panel[open] > summary { margin-bottom: 18px; }
-    .draft-box { display: grid; gap: 9px; margin-top: 14px; padding: 14px; border: 1px solid rgba(212,175,55,.3); background: rgba(9,9,13,.42); animation: rise .3s ease both; }
-    .draft-box label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
-    .draft-box textarea { min-height: 92px; }
+    .draft-box { display: grid; gap: 10px; margin-top: 14px; padding: 16px; border: 1px solid rgba(212,175,55,.3); border-radius: 20px; background: rgba(9,9,13,.42); animation: rise .3s ease both; }
+    .draft-box label { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .draft-box textarea { min-height: 96px; }
     .draft-options { display: grid; gap: 6px; }
-    .draft-option { padding: 8px 10px; border: 1px solid var(--line); color: var(--rose); font-size: 10px; line-height: 1.5; }
-    .draft-actions { display: grid; gap: 8px; }
+    .draft-option { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--rose); font-size: 14px; line-height: 1.4; }
+    .draft-actions { display: grid; gap: 9px; }
     .draft-actions .gold-button { width: 100%; }
-    .draft-mini-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .ask-custom { margin-top: 10px; }
-    .notice { min-height: 18px; margin: 9px 0 0; color: var(--rose); font-size: 10px; line-height: 1.6; }
-    .sensual-panel { border-color: rgba(232,160,160,.38); }
+    .draft-mini-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .ask-custom { margin-top: 12px; }
+    .notice { min-height: 18px; margin: 10px 0 0; color: var(--rose); font-size: 14px; font-weight: 600; line-height: 1.4; }
+    .sensual-panel { border-color: rgba(232,160,160,.3); }
     .sensual-panel h2, .sensual-panel .count { color: var(--rose); }
-    .sensual-bar { display: grid; gap: 10px; margin-top: 16px; }
+    .sensual-bar { display: grid; gap: 10px; margin-top: 14px; }
     .sensual-bar button { width: 100%; }
-    .adult-state { color: var(--rose); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
+    .adult-state { color: var(--rose); font-size: 13px; font-weight: 600; }
     .adult-tools { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
     .adult-tools.visible { display: block; animation: rise .35s ease both; }
-    .adult-tools label, .modal label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+    .adult-tools label, .modal label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 13px; font-weight: 600; }
     .adult-tools .add-row { display: grid; grid-template-columns: 1fr auto; margin-top: 9px; }
-    .adult-picker { display: grid; gap: 9px; }
-    .adult-picker label { margin-top: 6px; color: var(--muted); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
-    #customQuestionForm { display: grid; gap: 9px; }
-    .question-composer { display: grid; gap: 9px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); animation: rise .3s ease both; }
-    .question-composer label { color: var(--muted); font-size: 9px; letter-spacing: .13em; text-transform: uppercase; }
-    .composer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .adult-picker { display: grid; gap: 10px; }
+    .adult-picker label { margin-top: 6px; color: var(--muted); font-size: 13px; font-weight: 600; }
+    #customQuestionForm { display: grid; gap: 10px; }
+    .question-composer { display: grid; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); animation: rise .3s ease both; }
+    .question-composer label { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .composer-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-    .turn-head { margin-bottom: 21px; text-align: center; }
-    .turn-count { margin-bottom: 9px; color: var(--muted); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; }
-    .question-progress { display: inline-block; margin: 0 0 14px; padding: 7px 11px; border: 1px solid rgba(212,175,55,.2); color: var(--gold); font-size: 9px; letter-spacing: .1em; }
-    .active-name { margin: 0; color: var(--text); font-size: clamp(27px, 7vw, 40px); font-weight: 250; letter-spacing: .11em; }
-    .turn-hint { margin: 8px 0 0; color: var(--muted); font-size: 10px; line-height: 1.7; }
+    /* ---------- Accueil façon appli ---------- */
+    .hero { display: grid; justify-items: center; gap: 4px; margin-bottom: 28px; text-align: center; }
+    .hero-badge {
+      display: grid;
+      width: 96px;
+      height: 96px;
+      place-items: center;
+      margin-bottom: 12px;
+      border: 1px solid rgba(212,175,55,.35);
+      border-radius: 28px;
+      background: linear-gradient(150deg, rgba(212,175,55,.18), rgba(212,175,55,.04));
+      box-shadow: 0 16px 40px rgba(212,175,55,.18), inset 0 1px 0 rgba(255,255,255,.08);
+      font-size: 46px;
+      animation: rise .6s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .hero-badge.rose {
+      border-color: rgba(232,160,160,.4);
+      background: linear-gradient(150deg, rgba(232,160,160,.2), rgba(232,160,160,.05));
+      box-shadow: 0 16px 40px rgba(232,160,160,.2), inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    .hero h1 { margin: 0 0 4px; }
+    .hero-sub { margin: 0; color: var(--muted); font-size: 15px; }
+    .menu-panel { margin-bottom: 14px; }
+    .menu-title { margin: 0 0 14px; color: var(--muted); font-size: 14px; font-weight: 700; text-align: center; }
+    .menu-card {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+      padding: 18px;
+      border: 1px solid rgba(242,238,232,.08);
+      border-radius: 22px;
+      background: linear-gradient(150deg, rgba(32,32,41,.95), rgba(22,22,29,.95));
+      text-align: left;
+      box-shadow: 0 14px 40px rgba(0,0,0,.28);
+    }
+    .menu-card:hover:not(:disabled) { transform: translateY(-3px); border-color: rgba(212,175,55,.45); box-shadow: 0 20px 46px rgba(0,0,0,.36); }
+    .menu-emoji {
+      display: grid;
+      flex: 0 0 auto;
+      width: 56px;
+      height: 56px;
+      place-items: center;
+      border-radius: 18px;
+      background: rgba(212,175,55,.12);
+      font-size: 28px;
+    }
+    .menu-copy { display: grid; gap: 3px; flex: 1; min-width: 0; }
+    .menu-copy strong { font-size: 17px; font-weight: 800; }
+    .menu-copy small { color: var(--muted); font-size: 13px; }
+    .menu-arrow { color: var(--gold); font-size: 26px; font-weight: 700; }
+    .sensual-card { border-color: rgba(232,160,160,.3); background: linear-gradient(150deg, rgba(46,30,36,.95), rgba(26,20,26,.95)); }
+    .sensual-card:hover:not(:disabled) { border-color: rgba(232,160,160,.55); }
+    .sensual-card .menu-emoji { background: rgba(232,160,160,.14); }
+    .sensual-card .menu-arrow { color: var(--rose); }
+
+    .turn-head { margin-bottom: 20px; text-align: center; }
+    .turn-count { margin-bottom: 10px; color: var(--gold); font-size: 16px; font-weight: 800; letter-spacing: .01em; text-transform: none; }
+    .question-progress { display: inline-block; margin: 0 0 14px; padding: 9px 14px; border: 1px solid rgba(212,175,55,.25); border-radius: 999px; background: rgba(212,175,55,.08); color: var(--gold); font-size: 13px; font-weight: 600; letter-spacing: 0; }
+    .active-name { margin: 0; color: var(--text); font-size: clamp(26px, 7vw, 36px); font-weight: 800; letter-spacing: .01em; }
+    .turn-hint { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
     .room-code-card {
       display: grid;
       justify-items: center;
-      gap: 10px;
-      margin: 17px 0 18px;
-      padding: 18px 16px;
-      border: 1px solid rgba(212,175,55,.34);
-      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.11), transparent 72%), rgba(9,9,13,.35);
+      gap: 12px;
+      margin: 16px 0 18px;
+      padding: 20px 16px;
+      border: 1px solid rgba(212,175,55,.3);
+      border-radius: 22px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.12), transparent 72%), rgba(9,9,13,.35);
       text-align: center;
     }
-    .room-code-label { margin: 0; color: var(--gold); font-size: 9px; letter-spacing: .2em; text-transform: uppercase; }
+    .room-code-label { margin: 0; color: var(--gold); font-size: 13px; font-weight: 700; letter-spacing: .06em; text-transform: none; }
     .room-code-value {
       margin: 0;
       color: var(--text);
-      font-size: clamp(36px, 10vw, 46px);
-      font-weight: 400;
+      font-size: clamp(38px, 11vw, 50px);
+      font-weight: 800;
       font-variant-numeric: tabular-nums;
       letter-spacing: .14em;
       line-height: 1;
     }
-    #onlineCopyCode { min-height: 35px; padding: 0 14px; font-size: 9px; }
+    #onlineCopyCode { min-height: 44px; padding: 0 18px; font-size: 14px; }
     .room-code-hint { max-width: 310px; text-align: center; }
-    .mode-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
-    .mode-button { min-height: 76px; flex-direction: column; gap: 8px; border-color: rgba(212,175,55,.27); background: rgba(255,255,255,.025); }
-    .mode-button .mode-icon { color: var(--gold); font-size: 17px; }
-    .mode-button .mode-name { font-size: 9px; line-height: 1.45; letter-spacing: .08em; text-align: center; }
+    .mode-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .mode-button {
+      min-height: 104px;
+      flex-direction: column;
+      gap: 10px;
+      border-color: rgba(212,175,55,.22);
+      border-radius: 20px;
+      background: linear-gradient(160deg, rgba(255,255,255,.05), rgba(255,255,255,.015));
+    }
+    .mode-button:hover:not(:disabled) { border-color: rgba(212,175,55,.5); background: rgba(212,175,55,.08); }
+    .mode-button .mode-icon { font-size: 32px; }
+    .mode-button .mode-name { font-size: 14px; font-weight: 700; line-height: 1.3; letter-spacing: 0; text-align: center; }
+    .mode-button.rose-mode { border-color: rgba(232,160,160,.28); background: linear-gradient(160deg, rgba(232,160,160,.08), rgba(232,160,160,.02)); }
+    .mode-button.rose-mode:hover:not(:disabled) { border-color: rgba(232,160,160,.6); background: rgba(232,160,160,.12); }
     .choice-panel { display: none; margin-top: 12px; }
     .choice-panel.visible { display: block; animation: rise .3s ease both; }
     .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
-    .choice-button { min-height: 54px; border-color: rgba(232,160,160,.32); color: var(--rose); }
-    .choice-button:hover { border-color: var(--rose) !important; background: rgba(232,160,160,.06); }
+    .choice-button { min-height: 60px; border-radius: 16px; border-color: rgba(232,160,160,.3); color: var(--rose); font-size: 15px; }
+    .choice-button:hover { border-color: var(--rose) !important; background: rgba(232,160,160,.08); }
     .prompt-picker { display: grid; gap: 10px; margin-top: 12px; animation: rise .3s ease both; }
-    .prompt-picker label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
-    .prompt-picker select { min-height: 48px; }
+    .prompt-picker label { color: var(--muted); font-size: 13px; font-weight: 600; }
+    .prompt-picker select { min-height: 52px; }
     .picker-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
-    .picker-note { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
+    .picker-note { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
     .card-stage { perspective: 1100px; }
     .question-card {
       position: relative;
       display: flex;
-      min-height: 215px;
+      min-height: 230px;
       align-items: center;
       justify-content: center;
-      margin-top: 18px;
-      padding: 29px;
+      margin-top: 16px;
+      padding: 30px 26px;
       overflow: hidden;
-      border: 1px solid rgba(212,175,55,.28);
-      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.09), transparent 63%), linear-gradient(145deg, rgba(30,29,36,.98), rgba(18,18,24,.98));
+      border: 1px solid rgba(212,175,55,.3);
+      border-radius: 28px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(212,175,55,.1), transparent 63%), linear-gradient(155deg, rgba(34,33,42,.98), rgba(20,20,27,.98));
+      box-shadow: 0 24px 70px rgba(0,0,0,.45);
       text-align: center;
       transform: rotateX(8deg) translateY(12px);
       opacity: 0;
-      transition: transform .65s cubic-bezier(.2,.8,.2,1), opacity .55s ease, border-color .4s ease;
+      transition: transform .55s cubic-bezier(.2,.8,.2,1), opacity .45s ease, border-color .4s ease;
     }
     .question-card.visible { transform: rotateX(0) translateY(0); opacity: 1; }
-    .question-card::before, .question-card::after { position: absolute; width: 36px; height: 36px; border-color: rgba(212,175,55,.52); border-style: solid; content: ""; }
-    .question-card::before { top: 10px; left: 10px; border-width: 1px 0 0 1px; }
-    .question-card::after { right: 10px; bottom: 10px; border-width: 0 1px 1px 0; }
     .card-content { width: 100%; }
-    .card-label { margin: 0 0 17px; color: var(--gold); font-size: 9px; letter-spacing: .28em; text-transform: uppercase; }
-    .card-player { margin: 0 0 12px; color: var(--rose); font-size: 11px; letter-spacing: .14em; }
-    .question-text { margin: 0 auto; max-width: 400px; font-size: clamp(17px, 4.5vw, 23px); font-weight: 300; line-height: 1.65; letter-spacing: .035em; }
-    .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 12px; }
+    .card-label { margin: 0 0 16px; color: var(--gold); font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: none; }
+    .card-player { margin: 0 0 12px; color: var(--rose); font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+    .question-text { margin: 0 auto; max-width: 400px; font-size: clamp(20px, 5.5vw, 26px); font-weight: 600; line-height: 1.4; letter-spacing: 0; }
+    .card-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
     .card-actions.single { grid-template-columns: 1fr; }
-    .response-box { display: grid; gap: 8px; margin-top: 14px; }
-    .response-box label, .ask-target label { color: var(--muted); font-size: 9px; letter-spacing: .15em; text-transform: uppercase; }
-    .response-box textarea { min-height: 74px; }
+    .response-box { display: grid; gap: 10px; margin-top: 16px; }
+    .response-box label, .ask-target label { color: var(--muted); font-size: 13px; font-weight: 700; letter-spacing: .01em; text-transform: none; }
+    .response-box textarea { min-height: 80px; }
     .ask-target { margin-bottom: 16px; }
     .ask-target label { display: block; margin-bottom: 8px; }
-    .ask-or { margin: 20px 0 10px; text-align: center; }
-    .question-meta { margin: 13px 0 0; color: var(--rose); font-size: 10px; letter-spacing: .13em; line-height: 1.7; text-align: center; text-transform: uppercase; }
-    .answer-banner { margin: 16px 0 0; padding: 13px; border: 1px solid rgba(232,160,160,.35); background: rgba(232,160,160,.06); color: var(--text); font-size: 12px; line-height: 1.75; text-align: left; }
-    .answer-banner strong { color: var(--rose); font-weight: 400; }
-    .response-note { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.65; }
-    .answers { display: grid; gap: 8px; margin-top: 20px; }
-    .answer-button { min-height: 47px; justify-content: space-between; padding: 8px 12px; text-align: left; line-height: 1.45; letter-spacing: .035em; }
-    .answer-button.selected { border-color: var(--gold); background: rgba(212,175,55,.08); }
-    .vote-count { flex: 0 0 auto; color: var(--gold); font-size: 10px; }
-    .qcm-help { margin: 13px 0 0; color: var(--muted); font-size: 9px; line-height: 1.7; text-align: center; }
-    .result-banner { display: none; margin: 12px 0 0; padding: 11px; border: 1px solid rgba(212,175,55,.25); color: var(--gold); font-size: 10px; line-height: 1.6; text-align: center; }
+    .ask-target select { min-height: 56px; font-size: 16px; font-weight: 600; }
+    .ask-or { margin: 18px 0 12px; text-align: center; }
+    .question-meta { margin: 14px 0 0; color: var(--rose); font-size: 14px; font-weight: 600; letter-spacing: .01em; line-height: 1.5; text-align: center; text-transform: none; }
+    .answer-banner { margin: 16px 0 0; padding: 15px; border: 1px solid rgba(232,160,160,.3); border-radius: 18px; background: rgba(232,160,160,.07); color: var(--text); font-size: 16px; line-height: 1.5; text-align: left; }
+    .answer-banner strong { color: var(--rose); font-weight: 700; }
+    .response-note { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .answers { display: grid; gap: 10px; margin-top: 20px; }
+    .answer-button { min-height: 56px; justify-content: space-between; padding: 10px 16px; border-radius: 16px; text-align: left; font-size: 15px; line-height: 1.4; letter-spacing: 0; }
+    .answer-button.selected { border-color: var(--gold); background: rgba(212,175,55,.12); }
+    .vote-count { flex: 0 0 auto; color: var(--gold); font-size: 14px; font-weight: 700; }
+    .qcm-help { margin: 14px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; text-align: center; }
+    .result-banner { display: none; margin: 14px 0 0; padding: 14px; border: 1px solid rgba(212,175,55,.25); border-radius: 16px; background: rgba(212,175,55,.07); color: var(--gold); font-size: 14px; font-weight: 600; line-height: 1.5; text-align: center; }
     .result-banner.visible { display: block; animation: rise .35s ease both; }
-    .turn-footer { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; }
-    .turn-footer button { min-height: 37px; padding: 0 10px; font-size: 8px; }
-    .back-button { color: var(--muted); }
+    .turn-footer { display: flex; justify-content: space-between; gap: 10px; margin-top: 18px; }
+    .turn-footer button { min-height: 48px; padding: 0 16px; font-size: 14px; }
+    .back-button { color: var(--muted); background: transparent; }
 
-    .recap-list { display: grid; gap: 9px; margin: 21px 0; padding: 0; list-style: none; }
-    .recap-list li { padding: 13px 14px; border-left: 1px solid var(--gold); background: rgba(255,255,255,.03); color: #d8d3d6; font-size: 11px; line-height: 1.7; }
-    .recap-list strong { color: var(--rose); font-weight: 400; }
-    .empty-recap { color: var(--muted); font-size: 11px; line-height: 1.8; text-align: center; }
-    .recap-buttons { display: grid; gap: 9px; }
+    .recap-list { display: grid; gap: 10px; margin: 20px 0; padding: 0; list-style: none; }
+    .recap-list li { padding: 15px 16px; border: 1px solid rgba(242,238,232,.06); border-radius: 16px; background: rgba(255,255,255,.03); color: #d8d3d6; font-size: 15px; line-height: 1.5; }
+    .recap-list strong { color: var(--rose); font-weight: 700; }
+    .empty-recap { color: var(--muted); font-size: 15px; line-height: 1.6; text-align: center; }
+    .recap-buttons { display: grid; gap: 10px; }
 
     .modal-backdrop { position: fixed; z-index: 4; inset: 0; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(5,5,8,.78); backdrop-filter: blur(7px); }
     .modal-backdrop.visible { display: flex; animation: fade .25s ease both; }
     @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-    .modal { width: min(100%, 390px); padding: 26px; border: 1px solid var(--line); background: #17171e; box-shadow: 0 25px 90px rgba(0,0,0,.5); animation: rise .3s ease both; }
-    .modal h2 { margin-bottom: 8px; font-size: 20px; }
-    .modal p { margin-bottom: 17px; color: var(--muted); font-size: 10px; line-height: 1.7; }
-    .modal input { margin-bottom: 10px; }
-    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 11px; }
+    .modal { width: min(100%, 390px); padding: 26px; border: 1px solid var(--line); border-radius: 26px; background: #17171e; box-shadow: 0 25px 90px rgba(0,0,0,.5); animation: rise .3s ease both; }
+    .modal h2 { margin-bottom: 10px; font-size: 22px; font-weight: 800; }
+    .modal p { margin-bottom: 17px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+    .modal input { margin-bottom: 12px; text-align: center; font-size: 20px; font-weight: 800; letter-spacing: .22em; }
+    .modal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
     .modal .notice { margin-top: 0; }
-    footer { position: relative; z-index: 1; margin-top: 18px; color: #77737a; font-size: 8px; letter-spacing: .18em; text-align: center; text-transform: uppercase; }
+    footer { position: relative; z-index: 1; margin-top: 20px; color: #77737a; font-size: 12px; letter-spacing: .02em; text-align: center; text-transform: none; }
 
     /* ---------- Écran d'entrée : logo + chargement ---------- */
     html.splash-lock, html.splash-lock body { overflow: hidden; }
@@ -462,13 +560,15 @@
     body.splash-done .shell { animation: rise .75s cubic-bezier(.2,.8,.2,1) both; }
 
     @media (max-width: 500px) {
-      .shell { padding: 30px 16px 25px; }
-      .topline { top: 17px; left: 17px; right: 17px; font-size: 8px; }
-      main { padding-top: 48px; }
-      .panel { padding: 18px 15px; }
-      .mode-grid { grid-template-columns: 1fr; }
-      .mode-button { min-height: 49px; flex-direction: row; }
-      .question-card { min-height: 190px; padding: 24px 20px; }
+      .shell { padding: 24px 14px 24px; }
+      .topline { top: 15px; left: 15px; right: 15px; font-size: 11px; }
+      main { padding-top: 46px; }
+      .panel { padding: 18px 16px; }
+      .hero-badge { width: 82px; height: 82px; border-radius: 24px; font-size: 40px; }
+      .menu-emoji { width: 50px; height: 50px; font-size: 25px; }
+      .mode-grid { grid-template-columns: repeat(2, 1fr); }
+      .mode-button { min-height: 92px; }
+      .question-card { min-height: 200px; padding: 26px 20px; }
       .turn-footer { flex-wrap: wrap; }
       .picker-actions { grid-template-columns: 1fr; }
       .composer-actions { grid-template-columns: 1fr; }
@@ -539,125 +639,114 @@
     <div class="topline"><span class="mark">E N</span><span>Une soirée, vos règles</span></div>
     <main>
       <section class="view active" id="setupView">
-        <p class="intro">Un jeu pour se rapprocher</p>
-        <h1>ENTRE NOUS</h1>
-        <p class="lead">Des questions, des histoires et quelques surprises. Installez-vous, passez le téléphone, profitez du moment.</p>
-        <div class="panel">
-          <div class="section-head">
-            <h2>Jouer en ligne</h2>
-            <span class="count">6 chiffres</span>
-          </div>
-          <p class="online-hint">Chaque personne ouvre le jeu sur son appareil. Entrez le code reçu pour rejoindre la salle : aucun prénom n'est demandé avant l'entrée.</p>
+        <div class="hero">
+          <div class="hero-badge" aria-hidden="true">🥂</div>
+          <h1>ENTRE NOUS</h1>
+          <p class="hero-sub">Le jeu qui rapproche</p>
+        </div>
+
+        <div class="panel menu-panel">
+          <p class="menu-title">Rejoindre une salle</p>
           <form class="room-form" id="roomForm">
-            <label for="roomCode">Code de la salle</label>
-            <input id="roomCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres">
-            <button class="gold-button wide" type="submit">Rejoindre la salle</button>
+            <input id="roomCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres" aria-label="Code de la salle">
+            <button class="gold-button wide" type="submit">🎮 Rejoindre</button>
           </form>
           <div class="setup-actions">
-            <button class="subtle-button wide" id="createRoomButton" type="button">Créer une nouvelle salle</button>
-            <button class="subtle-button wide" id="resumeRoomButton" type="button" hidden>Reprendre la salle</button>
+            <button class="subtle-button wide" id="createRoomButton" type="button">➕ Créer une salle</button>
+            <button class="subtle-button wide" id="resumeRoomButton" type="button" hidden>↩️ Reprendre la salle</button>
           </div>
           <p class="notice" id="roomNotice" role="status"></p>
-          <p class="fine-print">Votre nom et le nombre de joueurs s'affichent dans la salle, une fois connecté.</p>
         </div>
 
-        <div class="panel sensual-panel">
-          <div class="section-head">
-            <h2>Jeu sensuel · 18+</h2>
-            <span class="count">espace à part</span>
-          </div>
-          <p class="online-hint">Une autre soirée, entièrement séparée du jeu classique : ses propres salles, ses propres questions, ses propres codes. Aucune catégorie 18+ n'apparaît jamais dans la soirée Entre Nous.</p>
-          <div class="setup-actions">
-            <button class="rose-button wide" id="sensualEntry" type="button">Entrer dans le jeu sensuel</button>
-          </div>
-          <p class="fine-print">Réservé aux adultes. Vous pourrez toujours passer votre tour.</p>
-        </div>
+        <button class="menu-card sensual-card" id="sensualEntry" type="button">
+          <span class="menu-emoji" aria-hidden="true">🔥</span>
+          <span class="menu-copy">
+            <strong>Jeu sensuel</strong>
+            <small>18+ · salles et questions à part</small>
+          </span>
+          <span class="menu-arrow" aria-hidden="true">›</span>
+        </button>
 
         <details class="panel local-panel" id="localPanel">
-          <summary>Jouer à plusieurs sur un seul appareil</summary>
+          <summary><span class="menu-emoji" aria-hidden="true">📱</span> Sur un seul appareil</summary>
           <div class="section-head">
             <h2>Qui joue ce soir ?</h2>
             <span class="count" id="playerCount">0 / 12</span>
           </div>
           <ul class="player-list" id="playerList"></ul>
           <form class="add-row" id="playerForm">
-            <input id="playerInput" maxlength="24" autocomplete="off" placeholder="Un prénom…" aria-label="Prénom du joueur">
+            <input id="playerInput" maxlength="24" autocomplete="off" placeholder="Prénom…" aria-label="Prénom du joueur">
             <button class="gold-button" type="submit">Ajouter</button>
           </form>
           <p class="notice" id="setupNotice" role="status"></p>
           <div class="setup-actions">
-            <button class="gold-button wide" id="playButton" type="button">Jouer</button>
+            <button class="gold-button wide" id="playButton" type="button">▶ Jouer</button>
           </div>
-          <p class="fine-print">Chacun peut passer son tour. Le plus important : que tout le monde soit à l'aise.</p>
         </details>
       </section>
 
       <section class="view" id="sensualEntryView" aria-live="polite">
-        <p class="intro">Espace séparé · réservé aux adultes</p>
-        <h1 style="font-size:clamp(36px,8.6vw,58px)">JEU SENSUEL</h1>
-        <p class="lead">Une soirée à part, avec des questions plus intimes. Mêmes règles qu'en ligne : chacun reçoit les questions sur son appareil et répond lui-même.</p>
-        <div class="panel sensual-panel">
-          <div class="section-head">
-            <h2>Connexion au jeu sensuel</h2>
-            <span class="count">6 chiffres</span>
-          </div>
-          <p class="online-hint">Entrez le code d'une salle sensuelle, ou créez-en une nouvelle. Aucun prénom n'est demandé avant l'entrée.</p>
+        <div class="hero">
+          <div class="hero-badge rose" aria-hidden="true">🔥</div>
+          <h1>JEU SENSUEL</h1>
+          <p class="hero-sub">18+ · un espace à part</p>
+        </div>
+        <div class="panel sensual-panel menu-panel">
+          <p class="menu-title">Rejoindre une salle</p>
           <form class="room-form" id="sensualRoomForm">
-            <label for="sensualRoomCode">Code de la salle</label>
-            <input id="sensualRoomCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres">
-            <button class="gold-button wide" type="submit">Rejoindre la salle</button>
+            <input id="sensualRoomCode" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="6 chiffres" aria-label="Code de la salle">
+            <button class="rose-button wide" type="submit">🎮 Rejoindre</button>
           </form>
           <div class="setup-actions">
-            <button class="rose-button wide" id="sensualCreateButton" type="button">Créer une salle sensuelle</button>
-            <button class="subtle-button wide" id="sensualResumeButton" type="button" hidden>Reprendre la salle</button>
+            <button class="rose-button wide" id="sensualCreateButton" type="button">➕ Créer une salle</button>
+            <button class="subtle-button wide" id="sensualResumeButton" type="button" hidden>↩️ Reprendre la salle</button>
           </div>
           <p class="notice" id="sensualNotice" role="status"></p>
-          <p class="fine-print">Votre nom et le nombre de joueurs s'affichent dans la salle, une fois connecté.</p>
           <div class="sensual-bar">
-            <button class="subtle-button wide" id="adultButton" type="button">Jouer hors ligne sur un seul appareil</button>
-          </div>
-          <div class="setup-actions">
-            <button class="subtle-button wide" id="sensualBackHome" type="button">← Retour à l'accueil</button>
+            <button class="subtle-button wide" id="adultButton" type="button">📱 Jouer hors ligne</button>
+            <button class="subtle-button wide" id="sensualBackHome" type="button">← Retour</button>
           </div>
         </div>
       </section>
 
       <section class="view" id="adultView" aria-live="polite">
-        <p class="intro">Hors ligne · un seul appareil</p>
-        <h1 style="font-size:clamp(38px,9vw,60px)">JEU SENSUEL</h1>
-        <p class="lead">Choisis une catégorie, sélectionne une question chaude ou écris la vôtre. La question est montrée au joueur dont c'est le tour.</p>
+        <div class="hero">
+          <div class="hero-badge rose" aria-hidden="true">🔥</div>
+          <h1>JEU SENSUEL</h1>
+          <p class="hero-sub">Hors ligne · un seul appareil</p>
+        </div>
         <div class="turn-head">
           <p class="turn-count" id="adultTurnCount">Tour 01</p>
-          <p class="question-progress" id="adultQuestionProgress">Questions posées : 0 · Réponses : 0</p>
+          <p class="question-progress" id="adultQuestionProgress">Questions 0 · Réponses 0</p>
           <h2 class="active-name" id="adultActiveName"></h2>
         </div>
         <div class="panel">
           <div class="adult-picker">
             <label for="adultCategory">Catégorie</label>
             <select id="adultCategory">
-              <option value="truth">Vérité chaude</option>
-              <option value="action">Action sensuelle</option>
-              <option value="consequence">Conséquence</option>
+              <option value="truth">💋 Vérité chaude</option>
+              <option value="action">🔥 Action sensuelle</option>
+              <option value="consequence">😵 Conséquence</option>
             </select>
-            <label for="adultPromptSelect">Question à poser</label>
+            <label for="adultPromptSelect">Question</label>
             <select id="adultPromptSelect"></select>
             <p class="picker-note" id="adultPoolCount"></p>
-            <button class="rose-button wide" id="adultAskButton" type="button">Poser cette question</button>
+            <button class="rose-button wide" id="adultAskButton" type="button">🚀 Poser</button>
           </div>
           <div class="adult-tools visible">
-            <label for="customQuestion">Ajouter votre question à la bibliothèque</label>
+            <label for="customQuestion">✏️ Ma question</label>
             <form id="customQuestionForm">
               <textarea id="customQuestion" maxlength="220" placeholder="Écris une question…"></textarea>
-              <button class="rose-button wide" type="submit">Enregistrer la question</button>
+              <button class="rose-button wide" type="submit">✔ Ajouter</button>
             </form>
-            <p class="fine-print">Les questions enregistrées restent sur cet appareil. Tout le monde peut passer ou refuser un défi.</p>
+            <p class="fine-print">Sur cet appareil uniquement. Chacun peut passer.</p>
           </div>
           <div class="card-stage" id="adultCardStage"></div>
           <div class="turn-footer">
-            <button class="back-button" id="adultBackToPicker" type="button" hidden>← Retour aux questions</button>
-            <button class="subtle-button" id="adultEndButton" type="button">Terminer la soirée</button>
-            <button class="subtle-button" id="adultBackHome" type="button">← Retour à l'accueil</button>
-            <button class="subtle-button" id="adultLockButton" type="button">Verrouiller le mode 18+</button>
+            <button class="back-button" id="adultBackToPicker" type="button" hidden>← Questions</button>
+            <button class="subtle-button" id="adultEndButton" type="button">🏁 Terminer</button>
+            <button class="subtle-button" id="adultBackHome" type="button">🏠 Accueil</button>
+            <button class="subtle-button" id="adultLockButton" type="button">🔒 Verrouiller</button>
           </div>
           <p class="notice" id="adultNotice" role="status"></p>
         </div>
@@ -666,32 +755,32 @@
       <section class="view" id="gameView" aria-live="polite">
         <div class="turn-head">
           <p class="turn-count" id="turnCount">Tour 01</p>
-          <p class="question-progress" id="questionProgress" aria-live="polite">Questions posées : 0 · Réponses : 0</p>
+          <p class="question-progress" id="questionProgress" aria-live="polite">Questions 0 · Réponses 0</p>
           <h2 class="active-name" id="activeName"></h2>
-          <p class="turn-hint" id="turnHint">Choisis le genre de moment que tu veux partager.</p>
+          <p class="turn-hint" id="turnHint">Choisis un mode.</p>
         </div>
         <div class="panel">
           <div class="mode-grid" id="modeGrid">
-            <button class="mode-button" data-mode="av" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action ou vérité</span></button>
-            <button class="mode-button" data-mode="vc" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité ou conséquence</span></button>
-            <button class="mode-button" data-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Question à choix</span></button>
-            <button class="mode-button" data-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
-            <button class="mode-button" data-mode="guessWho" type="button"><span class="mode-icon">?</span><span class="mode-name">Devine qui</span></button>
+            <button class="mode-button" data-mode="av" type="button"><span class="mode-icon">🔥</span><span class="mode-name">Action ou vérité</span></button>
+            <button class="mode-button" data-mode="vc" type="button"><span class="mode-icon">💀</span><span class="mode-name">Vérité ou conséquence</span></button>
+            <button class="mode-button" data-mode="qcm" type="button"><span class="mode-icon">📝</span><span class="mode-name">Question à choix</span></button>
+            <button class="mode-button" data-mode="wouldYouRather" type="button"><span class="mode-icon">🤔</span><span class="mode-name">Tu préfères</span></button>
+            <button class="mode-button" data-mode="guessWho" type="button"><span class="mode-icon">🙈</span><span class="mode-name">Devine qui</span></button>
           </div>
           <div class="choice-panel" id="choicePanel">
             <div class="choice-grid" id="choiceGrid"></div>
           </div>
           <div class="card-stage" id="cardStage"></div>
           <div class="turn-footer">
-            <button class="back-button" id="backToModes" type="button">← Choisir un autre mode</button>
-            <button class="subtle-button" id="endButton" type="button">Terminer la soirée</button>
+            <button class="back-button" id="backToModes" type="button">← Autre mode</button>
+            <button class="subtle-button" id="endButton" type="button">Terminer</button>
           </div>
         </div>
       </section>
 
       <section class="view" id="onlineView" aria-live="polite">
-        <p class="intro" id="onlineIntro">Partie en réseau</p>
         <div class="turn-head">
+          <p class="intro" id="onlineIntro">Partie en réseau</p>
           <p class="turn-count" id="onlineRoomTitle">Salle · ------</p>
           <p class="question-progress" id="onlineConnection">Connexion en cours…</p>
           <h2 class="active-name" id="onlineActiveName"></h2>
@@ -700,53 +789,49 @@
         <div class="panel">
           <div class="section-head"><h2>Joueurs</h2><span class="count" id="onlinePlayerCount"></span></div>
           <div class="online-identity">
-            <label for="onlineName">Votre nom dans la salle</label>
             <form class="add-row" id="onlineNameForm">
-              <input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Choisissez votre nom">
-              <button class="subtle-button" type="submit">Valider</button>
+              <input id="onlineName" maxlength="24" autocomplete="nickname" placeholder="Votre nom" aria-label="Votre nom dans la salle">
+              <button class="subtle-button" type="submit">OK</button>
             </form>
-            <p class="picker-note">Vous pouvez changer ce nom à tout moment.</p>
           </div>
           <ul class="player-list" id="onlinePlayers"></ul>
           <div id="onlineLobby">
             <div class="room-code-card">
               <p class="room-code-label" id="onlineRoomCodeLabel">Code de la salle</p>
               <p class="room-code-value" id="onlineRoomCode" aria-label="Code de la salle à 6 chiffres">------</p>
-              <button class="subtle-button" id="onlineCopyCode" type="button">Copier le code</button>
-              <p class="picker-note room-code-hint">Vos amis ouvrent le jeu, entrent ce code puis choisissent leur nom.</p>
+              <button class="subtle-button" id="onlineCopyCode" type="button">📋 Copier</button>
             </div>
-            <p class="picker-note">La partie attend que l'hôte la lance.</p>
-            <button class="gold-button wide" id="onlineStart" type="button" hidden>Lancer la partie</button>
+            <button class="gold-button wide" id="onlineStart" type="button" hidden>🚀 Lancer la partie</button>
           </div>
           <div id="onlineGame" hidden>
             <div id="onlineAskPanel" hidden>
               <div class="ask-target">
-                <label for="onlineTarget">À qui posez-vous la question ?</label>
+                <label for="onlineTarget">❓ À qui ?</label>
                 <select id="onlineTarget" aria-label="Personne à interroger"></select>
               </div>
               <p class="picker-note ask-or" id="onlineAskNote">Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.</p>
               <div class="mode-grid" id="onlineModes">
-                <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité</span></button>
-                <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action</span></button>
-                <button class="mode-button" data-online-mode="qcm" type="button"><span class="mode-icon">☷</span><span class="mode-name">Choix multiple</span></button>
-                <button class="mode-button" data-online-mode="wouldYouRather" type="button"><span class="mode-icon">↔</span><span class="mode-name">Tu préfères</span></button>
+                <button class="mode-button" data-online-mode="truth" type="button"><span class="mode-icon">💬</span><span class="mode-name">Vérité</span></button>
+                <button class="mode-button" data-online-mode="action" type="button"><span class="mode-icon">⚡</span><span class="mode-name">Action</span></button>
+                <button class="mode-button" data-online-mode="qcm" type="button"><span class="mode-icon">📝</span><span class="mode-name">Choix multiple</span></button>
+                <button class="mode-button" data-online-mode="wouldYouRather" type="button"><span class="mode-icon">🤔</span><span class="mode-name">Tu préfères</span></button>
               </div>
               <div class="mode-grid" id="onlineSensualModes" hidden>
-                <button class="mode-button" data-sensual-category="truth" type="button"><span class="mode-icon">◇</span><span class="mode-name">Vérité chaude</span></button>
-                <button class="mode-button" data-sensual-category="action" type="button"><span class="mode-icon">✳</span><span class="mode-name">Action sensuelle</span></button>
-                <button class="mode-button" data-sensual-category="consequence" type="button"><span class="mode-icon">☷</span><span class="mode-name">Conséquence</span></button>
+                <button class="mode-button rose-mode" data-sensual-category="truth" type="button"><span class="mode-icon">💋</span><span class="mode-name">Vérité chaude</span></button>
+                <button class="mode-button rose-mode" data-sensual-category="action" type="button"><span class="mode-icon">🔥</span><span class="mode-name">Action sensuelle</span></button>
+                <button class="mode-button rose-mode" data-sensual-category="consequence" type="button"><span class="mode-icon">😵</span><span class="mode-name">Conséquence</span></button>
               </div>
-              <button class="subtle-button wide ask-custom" id="onlineWriteOwn" type="button">Écrire ma propre question</button>
+              <button class="subtle-button wide ask-custom" id="onlineWriteOwn" type="button">✏️ Écrire ma propre question</button>
               <div class="draft-box" id="onlineDraft" hidden>
                 <label for="onlineDraftText">Votre question</label>
                 <textarea id="onlineDraftText" maxlength="500" placeholder="Écrivez la question que vous voulez poser…"></textarea>
                 <div class="draft-options" id="onlineDraftOptions" hidden></div>
                 <p class="picker-note" id="onlineDraftNote" hidden>Les choix proposés seront envoyés tels quels.</p>
                 <div class="draft-actions">
-                  <button class="gold-button" id="onlineDraftSend" type="button">Poser cette question</button>
+                  <button class="gold-button" id="onlineDraftSend" type="button">✔ Poser cette question</button>
                   <div class="draft-mini-actions">
-                    <button class="subtle-button" id="onlineDraftAgain" type="button">Autre proposition</button>
-                    <button class="subtle-button" id="onlineDraftCustom" type="button">Écrire ma propre question</button>
+                    <button class="subtle-button" id="onlineDraftAgain" type="button">🔄 Autre proposition</button>
+                    <button class="subtle-button" id="onlineDraftCustom" type="button">✏️ Écrire</button>
                   </div>
                 </div>
               </div>
@@ -764,22 +849,24 @@
           </div>
           <p class="notice" id="onlineNotice" role="status"></p>
           <div class="turn-footer">
-            <button class="subtle-button" id="onlineLeave" type="button">Retour à l'accueil</button>
+            <button class="subtle-button wide" id="onlineLeave" type="button">← Retour à l'accueil</button>
           </div>
         </div>
       </section>
 
       <section class="view" id="recapView">
-        <p class="intro">Les moments partagés</p>
-        <h1 style="font-size:clamp(34px,8vw,54px)">C'ÉTAIT BEAU.</h1>
-        <p class="lead" id="recapSummary"></p>
+        <div class="hero">
+          <div class="hero-badge" aria-hidden="true">🥂</div>
+          <h1>C'ÉTAIT BEAU.</h1>
+          <p class="hero-sub" id="recapSummary"></p>
+        </div>
         <div class="panel">
-          <div class="section-head"><h2>Petits souvenirs</h2><span class="count" id="recapCount"></span></div>
+          <div class="section-head"><h2>📸 Souvenirs</h2><span class="count" id="recapCount"></span></div>
           <ul class="recap-list" id="recapList"></ul>
           <p class="empty-recap" id="emptyRecap">Le plus beau souvenir est peut-être encore à raconter.</p>
           <div class="recap-buttons">
-            <button class="gold-button wide" id="replayButton" type="button">Rejouer</button>
-            <button class="subtle-button wide" id="homeButton" type="button">Modifier les joueurs</button>
+            <button class="gold-button wide" id="replayButton" type="button">🔁 Rejouer</button>
+            <button class="subtle-button wide" id="homeButton" type="button">✏️ Modifier les joueurs</button>
           </div>
         </div>
       </section>
@@ -789,14 +876,14 @@
 
   <div class="modal-backdrop" id="codeModal" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
     <form class="modal" id="codeForm">
-      <h2 id="codeTitle">Un petit code entre nous</h2>
-      <p>Le jeu sensuel propose des questions plus intimes. Vous pouvez toujours passer votre tour.</p>
-      <label for="accessCode">Code d'accès</label>
+      <h2 id="codeTitle">🔒 Espace 18+</h2>
+      <p>Questions plus intimes. Chacun peut passer.</p>
+      <label for="accessCode">Code</label>
       <input id="accessCode" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="••••">
       <p class="notice" id="codeNotice" role="status"></p>
       <div class="modal-actions">
         <button class="subtle-button" id="cancelCode" type="button">Annuler</button>
-        <button class="gold-button" type="submit">Déverrouiller</button>
+        <button class="gold-button" type="submit">✔ Entrer</button>
       </div>
     </form>
   </div>
@@ -1178,7 +1265,7 @@
         $("#activeName").textContent = players[playerIndex];
         $("#adultTurnCount").textContent = `Tour ${String(turnNumber).padStart(2, "0")}`;
         $("#adultActiveName").textContent = players[playerIndex];
-        $("#adultQuestionProgress").textContent = `Questions posées : ${questionsAsked} · Réponses : ${answersGiven}`;
+        $("#adultQuestionProgress").textContent = `Questions ${questionsAsked} · Réponses ${answersGiven}`;
         $("#turnHint").textContent = "Choisis le genre de moment que tu veux partager.";
         $("#modeGrid").hidden = false;
         $("#choicePanel").classList.remove("visible");
@@ -1194,8 +1281,8 @@
       }
 
       function updateQuestionProgress() {
-        $("#questionProgress").textContent = `Questions posées : ${questionsAsked} · Réponses : ${answersGiven}`;
-        $("#adultQuestionProgress").textContent = `Questions posées : ${questionsAsked} · Réponses : ${answersGiven}`;
+        $("#questionProgress").textContent = `Questions ${questionsAsked} · Réponses ${answersGiven}`;
+        $("#adultQuestionProgress").textContent = `Questions ${questionsAsked} · Réponses ${answersGiven}`;
       }
 
       function recordMoment(text, mode) {
@@ -1336,7 +1423,7 @@
         responseBox.append(responseLabel, response, note);
         const actions = document.createElement("div");
         actions.className = "card-actions";
-        const validate = makeButton("Valider ma réponse →", "gold-button", () => {
+        const validate = makeButton("✔ Valider", "gold-button", () => {
           if (!response.value.trim()) {
             response.focus();
             return;
@@ -1350,7 +1437,7 @@
           validate.disabled = !response.value.trim();
         });
         actions.append(
-          makeButton("Passer sans répondre", "subtle-button", skipCard),
+          makeButton("⏭ Passer", "subtle-button", skipCard),
           validate
         );
         stage.append(responseBox, actions);
@@ -1414,7 +1501,7 @@
         askCustom.type = "submit";
         askCustom.className = "gold-button";
         askCustom.textContent = `Poser à ${players[playerIndex]}`;
-        const cancelCustom = makeButton("Retour aux modes", "subtle-button", () => {
+        const cancelCustom = makeButton("← Retour aux modes", "subtle-button", () => {
           $("#cardStage").replaceChildren();
           $("#choicePanel").classList.remove("visible");
           $("#modeGrid").hidden = false;
@@ -1451,7 +1538,7 @@
         stage.append(result);
         const actions = document.createElement("div");
         actions.className = "card-actions";
-        const validateVote = makeButton("Valider ma réponse →", "gold-button", () => {
+        const validateVote = makeButton("✔ Valider", "gold-button", () => {
           if (activeVoteIndex === null) return;
           answersGiven++;
           updateQuestionProgress();
@@ -1464,13 +1551,13 @@
           });
         }
         actions.append(
-          makeButton("Révéler le vote", "rose-button", revealVote),
+          makeButton("👀 Révéler", "rose-button", revealVote),
           validateVote
         );
         stage.append(actions);
         const skipActions = document.createElement("div");
         skipActions.className = "card-actions single";
-        skipActions.append(makeButton("Passer cette question", "subtle-button", skipCard));
+        skipActions.append(makeButton("⏭ Passer la question", "subtle-button", skipCard));
         stage.append(skipActions);
         recordMoment(currentQuestion.question, "Question au groupe");
         burstMotes(22, "#e8a0a0");
@@ -1553,7 +1640,7 @@
         }
         adultUnlocked = true;
         codeModal.classList.remove("visible");
-        $("#adultButton").textContent = "Ouvrir la page du jeu sensuel";
+        $("#adultButton").textContent = "📱 Jouer hors ligne";
         populateAdultQuestions();
         startGame("adult");
       }
@@ -1624,7 +1711,7 @@
 
       function lockAdultMode() {
         adultUnlocked = false;
-        $("#adultButton").textContent = "Jouer hors ligne sur un seul appareil";
+        $("#adultButton").textContent = "📱 Jouer hors ligne";
         $("#adultCardStage").replaceChildren();
         $("#adultBackToPicker").hidden = true;
         renderPlayers();
@@ -1966,7 +2053,7 @@
         }
         const identities = readSavedRooms().filter(item => item.code === saved.code);
         const label = identities.length === 1 && saved.name ? `${saved.code} · ${saved.name}` : saved.code;
-        $net(selector).textContent = `Reprendre la salle ${label}`;
+        $net(selector).textContent = `↩️ Reprendre la salle ${label}`;
         setHidden(selector, false);
       }
 
@@ -2266,7 +2353,7 @@
         window.clearTimeout(copyFeedbackTimer);
         draft = null;
         $net("#onlineIntro").textContent = "Partie en réseau";
-        $net("#onlineCopyCode").textContent = "Copier le code";
+        $net("#onlineCopyCode").textContent = "📋 Copier";
         $net("#onlineName").value = "";
         $net("#onlinePlayers").replaceChildren();
         $net("#onlineCard").replaceChildren();
@@ -2315,7 +2402,7 @@
         const roomCodeElement = $net("#onlineRoomCode");
         if (roomCodeElement.textContent !== room.code) {
           roomCodeElement.textContent = room.code;
-          $net("#onlineCopyCode").textContent = "Copier le code";
+          $net("#onlineCopyCode").textContent = "📋 Copier";
         }
         const nameInput = $net("#onlineName");
         if (myPlayer && document.activeElement !== nameInput) nameInput.value = myPlayer.name;
@@ -2343,7 +2430,7 @@
         setHidden("#onlineGame", !game.started);
         setHidden("#onlineStart", !isHost);
         $net("#onlineStart").disabled = room.players.length < 2;
-        $net("#onlineStart").textContent = game.ended ? "Rejouer" : "Lancer la partie";
+        $net("#onlineStart").textContent = game.ended ? "🔁 Rejouer" : "🚀 Lancer la partie";
         $net("#onlineNotice").textContent = "";
         $net("#onlineActiveName").textContent = game.started && activePlayer ? activePlayer.name : "";
         $net("#onlineTurnHint").textContent = game.started
@@ -2513,7 +2600,7 @@
             const submit = document.createElement("button");
             submit.type = "submit";
             submit.className = "gold-button";
-            submit.textContent = "Envoyer ma réponse";
+            submit.textContent = "✔ Envoyer";
             form.append(label, textarea, submit);
             form.addEventListener("submit", event => {
               event.preventDefault();
@@ -2543,9 +2630,9 @@
           const actions = document.createElement("div");
           actions.className = "card-actions";
           actions.append(question.answered
-            ? makeOnlineButton("Interroger quelqu'un d'autre", "gold-button", () => send("clearQuestion"))
-            : makeOnlineButton("Changer de question", "subtle-button", () => send("clearQuestion")));
-          actions.append(makeOnlineButton("Passer la main →", "rose-button", () => send("next")));
+            ? makeOnlineButton("🔄 Interroger quelqu'un d'autre", "gold-button", () => send("clearQuestion"))
+            : makeOnlineButton("🔄 Autre question", "subtle-button", () => send("clearQuestion")));
+          actions.append(makeOnlineButton("👉 Passer la main", "rose-button", () => send("next")));
           stage.append(actions);
         } else if (isTarget && question.answered) {
           const note = document.createElement("p");
@@ -2812,7 +2899,7 @@
         window.clearTimeout(copyFeedbackTimer);
         button.textContent = copied ? "Code copié ✓" : "Copie impossible";
         copyFeedbackTimer = window.setTimeout(() => {
-          if (room && room.code === code) button.textContent = "Copier le code";
+          if (room && room.code === code) button.textContent = "📋 Copier";
         }, 2000);
       }
       $net("#onlineCopyCode").addEventListener("click", copyRoomCode);
