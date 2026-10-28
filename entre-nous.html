@@ -322,6 +322,145 @@
     .modal .notice { margin-top: 0; }
     footer { position: relative; z-index: 1; margin-top: 18px; color: #77737a; font-size: 8px; letter-spacing: .18em; text-align: center; text-transform: uppercase; }
 
+    /* ---------- Écran d'entrée : logo + chargement ---------- */
+    html.splash-lock, html.splash-lock body { overflow: hidden; }
+    .splash {
+      position: fixed;
+      z-index: 50;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(58% 46% at 50% 40%, rgba(212,175,55,.12), transparent 72%),
+        radial-gradient(85% 60% at 50% 108%, rgba(232,160,160,.08), transparent 70%),
+        var(--night);
+      animation: splashOut .75s cubic-bezier(.4,0,.2,1) 2.35s forwards;
+    }
+    @keyframes splashOut {
+      to { opacity: 0; visibility: hidden; transform: scale(1.05); }
+    }
+    .splash-glow {
+      position: absolute;
+      width: min(420px, 92vw);
+      height: min(420px, 92vw);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,175,55,.15), transparent 64%);
+      filter: blur(4px);
+      animation: glowBreathe 3.4s ease-in-out infinite;
+    }
+    @keyframes glowBreathe {
+      0%, 100% { opacity: .55; transform: scale(.92); }
+      50% { opacity: 1; transform: scale(1.05); }
+    }
+    .splash-core {
+      position: relative;
+      display: grid;
+      width: 136px;
+      height: 136px;
+      place-items: center;
+      margin-bottom: 30px;
+    }
+    .splash-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .splash-ring circle { fill: none; stroke-width: 1.5; }
+    .ring-track { stroke: rgba(242,238,232,.1); }
+    .ring-draw {
+      stroke: var(--gold);
+      stroke-linecap: round;
+      stroke-dasharray: 340;
+      stroke-dashoffset: 340;
+      filter: drop-shadow(0 0 7px rgba(212,175,55,.6));
+      animation: ringDraw 1.45s cubic-bezier(.65,0,.35,1) .2s forwards;
+    }
+    @keyframes ringDraw { to { stroke-dashoffset: 0; } }
+    .splash-mark {
+      color: var(--gold);
+      font-size: 31px;
+      font-weight: 200;
+      letter-spacing: .26em;
+      text-indent: .26em;
+      opacity: 0;
+      animation: markIn .8s cubic-bezier(.2,.8,.2,1) .4s forwards;
+    }
+    @keyframes markIn {
+      from { opacity: 0; transform: scale(.72); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .splash-title {
+      display: flex;
+      margin: 0;
+      overflow: hidden;
+      color: var(--text);
+      font-size: clamp(30px, 8.5vw, 46px);
+      font-weight: 200;
+      letter-spacing: .26em;
+      margin-right: -.26em;
+    }
+    .splash-title span {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(115%);
+      animation: letterUp .65s cubic-bezier(.2,.8,.2,1) forwards;
+      animation-delay: calc(.55s + var(--i) * .055s);
+    }
+    .splash-title .splash-space { width: .5em; }
+    @keyframes letterUp { to { opacity: 1; transform: translateY(0); } }
+    .splash-tag {
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .34em;
+      text-indent: .34em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp .7s ease 1.15s forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .splash-bar {
+      display: block;
+      width: min(232px, 64vw);
+      height: 2px;
+      margin-top: 36px;
+      overflow: hidden;
+      background: rgba(242,238,232,.1);
+    }
+    .splash-bar i {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), #f6e3a1 55%, var(--rose));
+      box-shadow: 0 0 13px rgba(212,175,55,.75);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: loadFill 1.5s cubic-bezier(.5,0,.15,1) .8s forwards;
+    }
+    .splash-bar i::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.9), transparent);
+      transform: translateX(-100%);
+      animation: barShine 1.05s ease 1s infinite;
+    }
+    @keyframes loadFill { to { transform: scaleX(1); } }
+    @keyframes barShine { to { transform: translateX(100%); } }
+    .splash-status {
+      margin: 14px 0 0;
+      color: #77737a;
+      font-size: 9px;
+      letter-spacing: .22em;
+      text-indent: .22em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp .6s ease 1.35s forwards;
+    }
+    body.splash-done .shell { animation: rise .75s cubic-bezier(.2,.8,.2,1) both; }
+
     @media (max-width: 500px) {
       .shell { padding: 30px 16px 25px; }
       .topline { top: 17px; left: 17px; right: 17px; font-size: 8px; }
@@ -336,11 +475,65 @@
       .draft-mini-actions { grid-template-columns: 1fr; }
     }
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .splash { animation: splashOut .01ms 1.2s forwards !important; }
     }
   </style>
 </head>
 <body>
+  <div class="splash" id="splash" aria-hidden="true">
+    <span class="splash-glow"></span>
+    <div class="splash-core">
+      <svg class="splash-ring" viewBox="0 0 120 120" aria-hidden="true">
+        <circle class="ring-track" cx="60" cy="60" r="54"></circle>
+        <circle class="ring-draw" cx="60" cy="60" r="54"></circle>
+      </svg>
+      <span class="splash-mark">E N</span>
+    </div>
+    <p class="splash-title"><span style="--i:0">E</span><span style="--i:1">N</span><span style="--i:2">T</span><span style="--i:3">R</span><span style="--i:4">E</span><span class="splash-space" style="--i:5"></span><span style="--i:6">N</span><span style="--i:7">O</span><span style="--i:8">U</span><span style="--i:9">S</span></p>
+    <p class="splash-tag">Une soirée, vos règles</p>
+    <span class="splash-bar" aria-hidden="true"><i></i></span>
+    <p class="splash-status" id="splashStatus" role="status">Préparation de la soirée…</p>
+  </div>
+  <script>
+    (() => {
+      "use strict";
+      const splash = document.getElementById("splash");
+      const status = document.getElementById("splashStatus");
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      document.documentElement.classList.add("splash-lock");
+      // Messages du chargement, dans l'ordre.
+      const steps = [
+        "Préparation de la soirée…",
+        "Choix des questions…",
+        "Installation des cartes…",
+        "C'est prêt."
+      ];
+      let index = 0;
+      const ticker = window.setInterval(() => {
+        index += 1;
+        if (index >= steps.length - 1) {
+          index = steps.length - 1;
+          window.clearInterval(ticker);
+        }
+        if (status) status.textContent = steps[index];
+      }, reduce ? 350 : 750);
+      let finished = false;
+      function reveal() {
+        if (finished) return;
+        finished = true;
+        window.clearInterval(ticker);
+        document.documentElement.classList.remove("splash-lock");
+        document.body.classList.add("splash-done");
+        if (splash && splash.parentNode) splash.parentNode.removeChild(splash);
+      }
+      // L'écran disparaît quand l'animation de sortie est terminée (ou après un délai de sécurité).
+      if (splash) splash.addEventListener("animationend", event => {
+        if (event.animationName === "splashOut") reveal();
+      });
+      window.setTimeout(reveal, reduce ? 1400 : 3400);
+    })();
+  </script>
   <canvas id="ambience" aria-hidden="true"></canvas>
   <div class="shell">
     <div class="topline"><span class="mark">E N</span><span>Une soirée, vos règles</span></div>
@@ -560,19 +753,6 @@
             </div>
             <p class="picker-note" id="onlineWaiting" hidden></p>
             <div class="card-stage" id="onlineCard"></div>
-            <div class="adult-tools" id="onlineAdultTools" hidden>
-              <form id="onlineCustomQuestionForm">
-                <label for="onlineCustomCategory">Catégorie et questions personnalisées du jeu sensuel</label>
-                <select id="onlineCustomCategory" aria-label="Catégorie de la question personnalisée">
-                  <option value="truth">Vérité chaude</option>
-                  <option value="action">Action sensuelle</option>
-                  <option value="consequence">Conséquence</option>
-                </select>
-                <textarea id="onlineCustomQuestion" maxlength="220" placeholder="Écris une question…"></textarea>
-                <button class="rose-button wide" type="submit">Enregistrer sur le serveur</button>
-              </form>
-              <p class="picker-note" id="onlineCustomCount"></p>
-            </div>
             <div class="adult-tools" id="onlineDebug" hidden>
               <p class="picker-note">Menu debug</p>
               <div class="picker-actions">
@@ -2104,7 +2284,6 @@
         setHidden("#onlineLobby", false);
         setHidden("#onlineGame", true);
         setHidden("#onlineStart", true);
-        setHidden("#onlineAdultTools", true);
         setHidden("#onlineModes", false);
         setHidden("#onlineSensualModes", true);
         setHidden("#onlineDebug", true);
@@ -2176,15 +2355,11 @@
               : "À vous de choisir qui interroger.")
             : `C'est à ${activePlayer.name} de poser les questions.`
           : "En attente du lancement par l'hôte.";
-        const sensualTools = sensual && game.started && !game.ended;
-        setHidden("#onlineAdultTools", !sensualTools);
-        $net("#onlineAdultTools").classList.toggle("visible", sensualTools);
         setHidden("#onlineModes", sensual);
         setHidden("#onlineSensualModes", !sensual);
         $net("#onlineAskNote").textContent = sensual
           ? "Choisissez une catégorie : le jeu propose une question sensuelle, que vous pouvez ajuster ou remplacer."
           : "Choisissez un mode : le jeu propose une question, puis vous pouvez l'ajuster ou écrire la vôtre.";
-        $net("#onlineCustomCount").textContent = `${room.customQuestions.length} question(s) personnalisée(s) enregistrée(s) dans cette salle.`;
         setHidden("#onlineDebug", !debugVisible);
         $net("#onlineDebug").classList.toggle("visible", debugVisible);
 
@@ -2422,11 +2597,8 @@
           return { text: entry.question, options: [...entry.options] };
         }
         if (mode === "adult") {
-          // Questions déjà enregistrées dans la salle + questions intégrées.
-          const pool = room.customQuestions
-            .filter(item => item.category === category)
-            .map(item => item.text)
-            .concat(onlinePrompts.adult[category] || []);
+          // Questions intégrées du jeu sensuel : rien n'est enregistré sur le serveur.
+          const pool = onlinePrompts.adult[category] || [];
           return { text: pool.length ? pool[Math.floor(Math.random() * pool.length)] : "", options: [] };
         }
         if (mode === "truth" || mode === "action") {
@@ -2689,12 +2861,6 @@
       $net("#onlineSensualModes").addEventListener("click", event => {
         const button = event.target.closest("[data-sensual-category]");
         if (button) proposeMode("adult", button.dataset.sensualCategory);
-      });
-      $net("#onlineCustomQuestionForm").addEventListener("submit", event => {
-        event.preventDefault();
-        const input = $net("#onlineCustomQuestion");
-        send("customQuestion", { text: input.value, category: $net("#onlineCustomCategory").value });
-        input.value = "";
       });
       $net("#debugNext").addEventListener("click", () => send("next"));
       $net("#debugHistory").addEventListener("click", () => send("clearHistory"));

@@ -26,7 +26,6 @@ function loadRooms() {
     room.kind = room.kind === "sensual" ? "sensual" : "classic";
     room.players = room.players.map(player => ({ ...player, online: false }));
     room.connections = new Map();
-    room.customQuestions = Array.isArray(room.customQuestions) ? room.customQuestions : [];
     room.game.votes = [];
     // Le jeu sensuel est une salle à part : il n'a jamais de verrou 18+.
     room.game.adultUnlocked = room.kind === "sensual";
@@ -85,7 +84,6 @@ function roomSnapshot(room, playerId) {
       kind: room.kind,
       hostId: room.hostId,
       players: room.players.map(({ id, name, online }) => ({ id, name, online, host: id === room.hostId })),
-      customQuestions: room.customQuestions,
       game
     },
     playerId
@@ -135,7 +133,6 @@ function createRoom(name, socket, kind) {
     kind,
     hostId: player.id,
     players: [player],
-    customQuestions: [],
     game: makeGame(),
     connections: new Map([[player.id, socket]])
   };
@@ -457,16 +454,9 @@ function handleMessage(socket, data) {
       game.adultUnlocked = true;
       persistAndBroadcast(room);
       break;
-    case "customQuestion": {
-      // La bibliothèque de questions personnalisées appartient au jeu sensuel.
-      if (room.kind !== "sensual") return sendError(socket, "Cette fonction appartient au jeu sensuel 18+.");
-      const text = typeof message.text === "string" ? message.text.trim().slice(0, 220) : "";
-      const category = ["truth", "action", "consequence"].includes(message.category) ? message.category : "";
-      if (text.length < 8 || !category) return sendError(socket, "Question ou catégorie invalide.");
-      room.customQuestions.push({ text, category });
-      persistAndBroadcast(room);
-      break;
-    }
+    case "customQuestion":
+      // Une question écrite par un joueur ne s'enregistre pas : elle sert à la question posée, puis est oubliée.
+      return sendError(socket, "Les questions écrites ne sont pas enregistrées : posez-la directement.");
     case "clearHistory":
       if (!isHost) return sendError(socket, "Seul l'hôte peut vider l'historique.");
       game.history = [];

@@ -21,6 +21,8 @@ ipconfig
 
 Ne lancez pas le fichier par double-clic (`file://`) pour le multijoueur. Le jeu hors ligne reste utilisable ainsi, mais les salles ont besoin du serveur.
 
+Au démarrage, un écran d'entrée présente le logo « ENTRE NOUS » avec une courte animation de chargement ; l'interface s'ouvre ensuite automatiquement.
+
 ## Jouer en réseau
 
 1. Sur l'accueil, **Créer une nouvelle salle** ouvre une salle et attribue un nom par défaut (« Joueur 1 »), modifiable dans la salle. Aucun prénom n'est demandé avant la connexion.
@@ -36,16 +38,23 @@ Le bouton **Retour à l'accueil** ramène à l'écran de connexion. Il n'y a pas
 ### Reprendre une salle
 
 - La place d'un onglet est conservée dans le stockage de session du navigateur : un rafraîchissement permet de retrouver la même place en ressaisissant le code.
-- Le bouton **Reprendre la salle** de l'accueil retrouve la dernière salle fréquentée sur cet appareil. Il s'appuie sur une liste de places enregistrées pour chaque salle et essaie l'hôte en priorité, puis les autres places. Si toutes sont déjà ouvertes ailleurs, le joueur entre comme nouveau joueur.
+- Le bouton **Reprendre la salle** de l'accueil retrouve la dernière salle fréquentée sur cet appareil (un accueil distinct pour le jeu sensuel). Il s'appuie sur une liste de places enregistrées pour chaque salle et essaie l'hôte en priorité, puis les autres places. Si toutes sont déjà ouvertes ailleurs, le joueur entre comme nouveau joueur.
 - Une coupure réseau passagère est reprise automatiquement par le client, sans recréer de salle.
 - Un départ volontaire de l'hôte ferme la salle immédiatement pour tout le monde : les autres joueurs doivent créer une nouvelle salle et obtiennent un nouveau code.
 - Si l'hôte disparaît sans le vouloir (coupure, onglet fermé), sa salle reste ouverte pendant 60 secondes. S'il revient dans ce délai, elle reste en place ; sinon elle est fermée et les joueurs restants reviennent à l'accueil. Le rôle d'hôte n'est plus transféré automatiquement.
 
 L'hôte est le premier joueur à créer la salle. Il est le seul à pouvoir lancer/rejouer. Seul le joueur actif pose les questions et peut passer la main. Si ce joueur ferme son onglet, la main passe automatiquement au joueur suivant après quelques secondes (le temps qu'il puisse se reconnecter). Les joueurs absents restent dans la liste.
 
-Le mode 18+ demande le code **6969**. Les questions personnalisées ajoutées dans ce mode sont enregistrées dans la salle côté serveur.
+### Le jeu sensuel · 18+
 
-Le jeu hors ligne reste disponible sans serveur : sur l'accueil, dépliez **Jouer à plusieurs sur un seul appareil** pour saisir les prénoms et lancer une partie en passant le téléphone.
+Le jeu sensuel est un espace entièrement séparé du jeu classique : il possède ses propres salles, ses propres codes à 6 chiffres et ses propres questions. Aucune catégorie 18+ n'apparaît jamais dans une soirée Entre Nous classique.
+
+- Depuis l'accueil, le panneau rose **Jeu sensuel · 18+** ouvre son écran de connexion dédié : **Entrer dans le jeu sensuel** permet de saisir le code d'une salle sensuelle ou d'en **Créer une salle sensuelle**.
+- Un code n'ouvre qu'un type de salle : entrer un code de soirée classique depuis l'accueil sensuel (ou l'inverse) est refusé avec un message explicite.
+- Dans une salle sensuelle, le joueur actif choisit une catégorie (Vérité chaude, Action sensuelle, Conséquence) puis pose la question, avec le même flux éditable qu'en ligne. Une question écrite par un joueur sert uniquement à la question posée : elle n'est jamais enregistrée sur le serveur ni réutilisée par quelqu'un d'autre.
+- Le bouton **Jouer hors ligne sur un seul appareil** de cet écran ouvre le jeu sensuel hors ligne (le code 6969 n'est utilisé que pour cette version hors ligne).
+
+Le jeu hors ligne classique reste disponible sans serveur : sur l'accueil, dépliez **Jouer à plusieurs sur un seul appareil** pour saisir les prénoms et lancer une partie en passant le téléphone.
 
 ## Déploiement sur Render (offre gratuite)
 
@@ -63,7 +72,7 @@ Le port est lu depuis la variable `PORT` fournie par Render. Aucun réglage WebS
 
 ### Limites importantes de l'offre gratuite
 
-Le service gratuit peut s'endormir après une période sans activité ; la première ouverture suivante peut prendre un peu de temps. Le fichier `data/rooms.json` sauvegarde les joueurs et questions personnalisées côté serveur, mais le disque d'un service Render gratuit est éphémère : ces données peuvent disparaître lors d'un redéploiement ou d'un redémarrage. Pour garantir leur conservation en production, il faut un stockage persistant (par exemple un disque Render payant ou une base de données). Les salles enregistrées localement ne sont pas une base de données durable.
+Le service gratuit peut s'endormir après une période sans activité ; la première ouverture suivante peut prendre un peu de temps. Le fichier `data/rooms.json` sauvegarde l'état des salles côté serveur (joueurs et parties en cours), mais le disque d'un service Render gratuit est éphémère : ces données peuvent disparaître lors d'un redéploiement ou d'un redémarrage. Pour garantir leur conservation en production, il faut un stockage persistant (par exemple un disque Render payant ou une base de données). Les salles enregistrées localement ne sont pas une base de données durable. Les questions écrites par les joueurs ne sont jamais conservées.
 
 ## Fichiers
 
