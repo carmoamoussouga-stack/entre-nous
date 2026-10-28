@@ -863,6 +863,7 @@
                 <button class="mode-button rose-mode" data-sensual-category="truth" type="button"><span class="mode-icon">💋</span><span class="mode-name">Vérité chaude</span></button>
                 <button class="mode-button rose-mode" data-sensual-category="action" type="button"><span class="mode-icon">🔥</span><span class="mode-name">Action sensuelle</span></button>
                 <button class="mode-button rose-mode" data-sensual-category="qcm" type="button"><span class="mode-icon">🍑</span><span class="mode-name">Choix multiple</span></button>
+                <button class="mode-button rose-mode" data-sensual-category="write" type="button"><span class="mode-icon">✍️</span><span class="mode-name">Poser une question</span></button>
               </div>
               <div class="draft-box" id="onlineDraft" hidden>
                 <label for="onlineDraftText">Votre question</label>
@@ -3036,6 +3037,28 @@
         $net("#onlineDraft").scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
+      // ✍️ Poser une question (jeu sensuel) : le poseur écrit lui-même sa question.
+      // Elle part en mode « custom » (question libre) : le serveur l'accepte en salle
+      // sensuelle, mais elle n'est jamais enregistrée — elle ne sert qu'à cette question.
+      function writeOwnSensualQuestion() {
+        if (!room || !room.game.started || room.game.ended) return;
+        if (!activeTurn()) {
+          $net("#onlineNotice").textContent = "C'est au tour d'un autre joueur de poser les questions.";
+          return;
+        }
+        if (room.game.question) {
+          $net("#onlineNotice").textContent = "Une question est déjà en cours.";
+          return;
+        }
+        if (!validTarget()) {
+          $net("#onlineNotice").textContent = "Choisissez d'abord la personne à interroger.";
+          return;
+        }
+        draft = { mode: "custom", category: "", text: "", options: [] };
+        renderDraft(true);
+        $net("#onlineDraft").scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
       function renderDraft(focus) {
         if (!draft) {
           setHidden("#onlineDraft", true);
@@ -3294,7 +3317,13 @@
       });
       $net("#onlineSensualModes").addEventListener("click", event => {
         const button = event.target.closest("[data-sensual-category]");
-        if (button) proposeMode("adult", button.dataset.sensualCategory);
+        if (!button) return;
+        // ✍️ Poser une question : le poseur écrit lui-même sa question sensuelle.
+        if (button.dataset.sensualCategory === "write") {
+          writeOwnSensualQuestion();
+          return;
+        }
+        proposeMode("adult", button.dataset.sensualCategory);
       });
       $net("#debugNext").addEventListener("click", () => send("next"));
       $net("#debugHistory").addEventListener("click", () => send("clearHistory"));
